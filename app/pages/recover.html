@@ -1,0 +1,70 @@
+<div ng-controller="RecoverFormController" class="block-center mt-xl wd-xl">
+   <!-- START panel-->
+   <div class="panel panel-dark panel-flat">
+      <div class="panel-heading text-center">
+         <a href="#">
+            <img src="app/img/logo.png" alt="Image" class="block-center img-rounded" />
+         </a>
+      </div>
+      <div class="panel-body">
+         <toaster-container toaster-options="{'position-class': 'toast-center', 'close-button':true}"></toaster-container>
+
+         <p class="text-center pv">重置密码</p>
+         <form role="form" name="recoverForm" novalidate="" class="form-validate mb-lg" ng-submit="recoverNext()" ng-show="recoverForm_show">
+            <!-- <p class="text-center">Fill with your mail to receive instructions on how to reset your password.</p> -->
+            <div class="form-group has-feedback">
+               <label class="text-muted">邮箱</label>
+               <input type="email" name="recover_email" placeholder="请输入邮箱" autocomplete="off" ng-model="recover.email" required="" class="form-control" />
+               <span class="fa fa-envelope form-control-feedback text-muted"></span>
+               <span ng-show="recoverForm.recover_email.$dirty &amp;&amp; recoverForm.recover_email.$error.required" class="text-danger">必填</span>
+               <span ng-show="recoverForm.recover_email.$dirty &amp;&amp; recoverForm.recover_email.$error.email" class="text-danger">请填写有效的邮箱地址</span>
+            </div>
+            <div class="form-group has-feedback">
+               <div class="pull-left mt0">
+               <input type="text" name="recover_code" placeholder="验证码" ng-model="recover.recoverCode" required class="form-control" />
+               <span ng-show="recoverForm.recover_code.$dirty &amp;&amp; recoverForm.recover_code.$error.required" class="text-danger">必填</span>
+               </div>
+               <div class="pull-right">
+                  <button type="button" name="get_code" ng-click="getRecoverCode()" class="btn btn-primary" 
+                  ng-disabled="show_code" ng-bind="code_text">获取验证码</button>
+               </div>
+            </div>
+            <div class="clearfix"></div>
+            <button type="submit" class="btn btn-danger btn-block mt-lg" ng-disabled="!recoverForm.$valid||recover_submmit" >下一步</button>
+         </form>
+         <!-- 重新设置密码 -->
+         <form role="form" name="resetPasswordForm" novalidate="" class="form-validate mb-lg" ng-submit="resetPassword()" ng-show="resetPasswordForm_show">
+            <div class="form-group has-feedback">
+               <label class="text-muted">邮箱</label>
+               <input type="email" name="recover_email" autocomplete="off" ng-model="recover.email" class="form-control" Readonly/>
+            </div>
+            <div class="form-group has-feedback">
+               <label class="text-muted">新密码</label>
+               <input id="id-password" type="password" name="account_password" ng-model="recover.password" ng-pattern="/^[a-zA-Z0-9]{6,15}$/" placeholder="密码包括数字大小写字母，长度6-15" required="" class="form-control" />
+               <span class="fa fa-lock form-control-feedback text-muted"></span>
+               <span ng-show="resetPasswordForm.account_password.$dirty &amp;&amp; resetPasswordForm.account_password.$error.required" class="text-danger">必填</span>
+               <span ng-show="resetPasswordForm.account_password.$dirty &amp;&amp; resetPasswordForm.account_password.$error.pattern" class="text-danger">密码包括 'a-zA-Z0-9'长度6-15 </span>
+            </div>
+            <div class="form-group has-feedback">
+               <label class="text-muted">重新输入密码</label>
+               <input type="password" name="account_password_confirm" ng-model="recover.account_password_confirm" ui-validate="'$value==recover.password'" ui-validate-watch="'password'" placeholder="密码包括数字大小写字母，长度6-15"  class="form-control" />
+               <span class="fa fa-lock form-control-feedback text-muted"></span>
+               <span ng-show="resetPasswordForm.account_password_confirm.$dirty &amp;&amp; resetPasswordForm.account_password_confirm.$error.validator" class="text-danger">两次输入密码不匹配</span>
+            </div>
+            <div class="clearfix"></div>
+            <button type="submit" class="btn btn-danger btn-block mt-lg" ng-disabled="!resetPasswordForm.$valid||resetPassword_submmit" >重置密码</button>
+         </form>
+         <div ng-show="authMsg" class="alert alert-danger text-center">{{authMsg}}</div>
+         <a ui-sref="page.login" class="btn btn-block btn-default">登录</a>
+      </div>
+   </div>
+   <!-- END panel-->
+   <div class="p-lg text-center">
+      <span>&copy;</span>
+      <span ng-bind="app.year"></span>
+      <span>-</span>
+      <span ng-bind="app.name"></span>
+      <br/>
+      <span ng-bind="app.description"></span>
+   </div>
+</div>

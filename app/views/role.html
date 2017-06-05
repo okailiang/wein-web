@@ -1,0 +1,200 @@
+<h3>角色管理
+    <small>角色管理</small>
+</h3>
+<div ng-controller="RoleController">
+
+    <!-- START panel-->
+    <div class="panel panel-default">
+        <toaster-container
+                toaster-options="{'position-class': 'toast-center', 'close-button':true}"></toaster-container>
+        <div class="text-center panel-heading line">
+            <div class="row">
+                <form role="form" name="searchForm" ng-submit="listRoles()" class="form-inline ng-pristine ng-valid">
+                    <div class="col-lg-3 col-md-4 col-xs-5">
+                        <div class="form-group">
+                            <label for="role-name" class="control-label">名称：</label>
+                            <input id="role-name" name="roleName" ng-model="searchRoleName" type="text"
+                                   placeholder="输入名称"
+                                   class="input-sm form-control">
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-md-4 col-xs-5">
+                        <div class="form-group">
+                            <label for="role-id" class="control-label">id：</label>
+                            <input id="role-id" type="number" name="roleId" ng-model="searchRoleId" min="1"
+                                   placeholder="输入id"
+                                   class="input-sm form-control">
+                        </div>
+                    </div>
+                    <div class="col-lg-1 col-md-1 col-xs-3">
+                        <div class="form-group">
+                            <button type="submit" class="btn btn-sm btn-info" data-loading-text="查询中">查询</button>
+                        </div>
+                    </div>
+                </form>
+                <div class="col-lg-1 col-md-1 col-xs-3 pull-right">
+                    <!--<div class="form-group" >-->
+                        <button type="button" data-toggle="modal" data-target="#matchRuleDialog"  class="btn btn-sm btn-info">增加</button>
+                    <!--</div>-->
+                </div>
+            </div>
+        </div>
+
+        <div class="panel-body table-padding">
+            <!-- START table-responsive-->
+            <div class="table-responsive">
+                <table class="table table-striped table-hover table-bordered thead-color">
+                    <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>角色名</th>
+                        <th>创建人</th>
+                        <th>创建时间</th>
+                        <th>操作</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr ng-repeat="role in roles">
+                        <td>{{ role.id }}</td>
+                        <td>{{ role.roleName}}</td>
+                        <td>{{ role.creator}}</td>
+                        <td>{{ role.createTime | date:'yyyy-MM-dd hh:mm:ss'}}</td>
+                        <td>
+                            <button type="button" title="编辑"
+                                    ng-click="openConfirm(role.id)" class="btn btn-sm bg-inherit no-border">
+                                <em class="fa fa-pencil text-info"></em>
+                            </button>
+                            <button type="button" title="删除"
+                                    ng-click="removeRole(role.id)" class="btn btn-sm bg-inherit no-border">
+                                <em class="fa fa-trash-o text-info"></em>
+                            </button>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+            <!-- END table-responsive-->
+            <!--</div>-->
+            <!--<div class="panel-footer">-->
+            <div class="text-center table-pagination" ng-show="totalItems > 0">
+                <div class="pagination-total-page">共{{totalItems}}条 / {{numPages}}页</div>
+                <pagination class="pagination-tab" total-items="totalItems" ng-change="pageChanged()"
+                            ng-model="currentPage"
+                            max-size="4" previous-text="上页" next-text="下页" first-text="首页" last-text="尾页"
+                            boundary-links="true" direction-links="false" items-per-page="pageSize"
+                            num-pages="numPages"></pagination>
+            </div>
+            <div class="ball-pulse text-center no-data" ng-show="loading">
+                <div></div>
+                <div></div>
+                <div></div>
+            </div>
+            <div class="text-center text-danger no-data" ng-show="totalItems == 0">暂无数据</div>
+        </div>
+    </div>
+    <!-- END panel-->
+
+    <!-- START 表单模态框-->
+    <div class="modal fade" id="matchRuleDialog" data-backdrop="static"
+         data-keyboard="false" aria-hidden="true">
+        <div class="modal-dialog" style="width: 50%;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal">
+                        <span>&times;</span>
+                    </button>
+                    <h4 class="modal-title" id="tv-iui-createMatchRuleTitle">创建匹配规则</h4>
+                </div>
+                <div class="modal-body">
+                    <form class="form-horizontal" id="createMatchRuleForm"
+                          name="mainCtrl.matchRuleForm" novalidate>
+                        <div class="form-group">
+                            <label class="control-label col-lg-3 col-sm-3 col-xs-3"
+                                   for="matchItemList"><span id="tv-iui-matchItemLabel">匹配项</span></label>
+                            <div class="col-lg-7 col-sm-7 col-xs-7">
+                                <select class="form-control" id="matchItemList"
+                                        ng-model="mainCtrl.newTemplate.matchItem"
+                                        ng-options="item for item in mainCtrl.matchItems">
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="control-label col-lg-3 col-sm-3 col-xs-3"
+                                   for="matchItemValue-input"> <span
+                                    id="tv-iui-matchItemValueLabel">匹配项值</span> <span
+                                    class="required">*</span>
+                            </label>
+                            <div class="col-lg-7 col-sm-7 col-xs-7">
+                                <input type="text" class="form-control" id="matchItemValue-input"
+                                       name="matchItemValue"
+                                       ng-model="mainCtrl.newTemplate.matchItemValue" required>
+                            <span style="color: red"
+                                  ng-show="mainCtrl.matchRuleForm.matchItemValue.$dirty && mainCtrl.matchRuleForm.matchItemValue.$invalid">
+                                <span
+                                        ng-show="mainCtrl.matchRuleForm.matchItemValue.$error.required"
+                                        id="tv-iui-requiredWarning">必填项</span>
+                            </span>
+
+                            </div>
+                        </div>
+
+
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary"
+                            id="tv-iui-matchRule-save"
+                            ng-click="[mainCtrl.addTemplate(),mainCtrl.resetTemplate()]"
+                            ng-disabled="mainCtrl.matchRuleForm.$invalid">确定</button>
+                    <button class="btn btn-default" data-dismiss="modal"
+                            id="tv-iui-matchRule-cancle">取消</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- START ngdialog-->
+    <script type="text/ng-template" id="modalDialogId">
+        <div class="ngdialog-message">
+            <div class="panel panel-default no-border">
+                <div class=""><h3 class="dialog-title">新增</h3></div>
+                <div class="panel-body no-padding">
+                    <form name="roleForm" ng-submit="saveRole()" novalidate=""
+                          class="form-horizontal form-validate ng-pristine ng-valid">
+                        <div class="form-group">
+                            <label class="control-label col-lg-2 col-md-2 col-sm-2">角色名</label>
+
+                            <div class="col-lg-10 col-md-10 col-sm-10">
+                                <input type="text" name="roleName" ng-model="roleName" placeholder="请填写字母、数字或汉字，2-10字符"
+                                       class="form-control" maxlength="10"
+                                       ng-pattern="/^[a-zA-Z0-9\u4e00-\u9fa5]{2,10}$/" required>
+                                <span ng-show="roleForm.roleName.$dirty &amp;&amp; roleForm.roleName.$error.required"
+                                      class="text-danger"></span>
+                                <span ng-show="roleForm.roleName.$dirty &amp;&amp; roleForm.roleName.$error.pattern"
+                                      class="text-danger"></span>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="control-label col-lg-2 col-md-2 col-sm-2">级别</label>
+
+                            <div class="col-lg-10 col-md-10 col-sm-10">
+                                <input type="number" placeholder="级别，正整数" min="0" class="form-control" required>
+                                <span ng-show="roleForm.roleName.$dirty &amp;&amp; roleForm.roleName.$error.required"
+                                      class="text-danger"></span>
+                                <span ng-show="roleForm.roleName.$dirty &amp;&amp; roleForm.roleName.$error.number"
+                                      class="text-danger"></span>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="text-center">
+                <button type="button" ng-click="confirm(confirmValue)" class="btn btn-info mr">保存</button>
+                <button type="button" ng-click="closeThisDialog('button')" class="btn btn-default">取消</button>
+            </div>
+        </div>
+    </script>
+    <!-- END ngdialog-->
+</div>
