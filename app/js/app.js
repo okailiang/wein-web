@@ -28,7 +28,7 @@ var App = angular.module('angle', [
     'ngSanitize',
     'ngResource',
     'tmh.dynamicLocale',
-    'ui.utils'
+    'ui.utils',
 ]);
 
 App.run(["$rootScope", "$state", "$stateParams", '$window', '$templateCache', function ($rootScope, $state, $stateParams, $window, $templateCache) {
@@ -102,23 +102,83 @@ App.config(['$stateProvider', '$locationProvider', '$urlRouterProvider', 'RouteH
                 templateUrl: helper.basepath('app.html'),
                 controller: 'AppController',
                 resolve: helper.resolveFor('fastclick', 'modernizr', 'icons', 'screenfull', 'animo', 'sparklines', 'slimscroll', 'classyloader', 'toaster', 'whirl')
-            }).state('app.listMenu', {
+            }).state('page.login', {
+                url: '/login',
+                title: "Login",
+                templateUrl: 'app/pages/login.html'
+            })
+            .state('page.logout', {
+                url: '/logout',
+                title: "Logout",
+                templateUrl: 'app/pages/login.html',
+                controller: ["$rootScope", "$scope", "$http", 'toaster', '$state', function ($rootScope, $scope, $http, toaster, $state) {
+                    $http.get('/logout').success(function (data) {
+                        $state.go('page.login');
+                    }).error(function (data, status, headers, config) {
+                        toaster.pop('error', null, data.message);
+                    });
+                }]
+            })
+            .state('page.register', {
+                url: '/register',
+                title: "Register",
+                templateUrl: 'app/pages/register.html',
+                resolve: helper.resolveFor('toaster'),
+            })
+            .state('page.recover', {
+                url: '/recover',
+                title: "Recover",
+                templateUrl: 'app/pages/recover.html',
+                resolve: helper.resolveFor('toaster'),
+            })
+            .state('page.lock', {
+                url: '/lock',
+                title: "Lock",
+                templateUrl: 'app/pages/lock.html'
+            })
+            .state('page.404', {
+                url: '/404',
+                title: "Not Found",
+                templateUrl: 'app/pages/404.html'
+            })
+            .state('app.listMenu', {
                 url: '/listMenu',
                 title: 'listMenu',
-                templateUrl: helper.basepath('sortable.html'),
-                resolve: helper.resolveFor('htmlSortable')
+                templateUrl: helper.basepath('menu.html'),
+                resolve: helper.resolveFor('treeitem', 'toaster', 'ngDialog', 'icons')
             })
             .state('app.listRole', {
                 url: '/listRole',
                 title: 'listRole',
                 templateUrl: helper.basepath('role.html'),
-                resolve: helper.resolveFor('toaster', 'ngDialog','loaders.css', 'spinkit')
+                resolve: helper.resolveFor('treeitem', 'toaster', 'ngDialog', 'loaders.css', 'spinkit')
+            })
+            .state('app.listUsers', {
+                url: '/listUsers',
+                title: 'listUsers',
+                templateUrl: helper.basepath('user.html'),
+                resolve: helper.resolveFor('toaster', 'ngDialog', 'loaders.css', 'spinkit')
+            })
+            .state('app.listSysUsers', {
+                url: '/listSysUsers',
+                title: 'listSysUsers',
+                templateUrl: helper.basepath('sys-user.html'),
+                resolve: helper.resolveFor('toaster', 'ngDialog', 'loaders.css', 'spinkit')
             })
             .state('app.dashboard', {
                 url: '/dashboard',
                 title: 'Dashboard',
                 templateUrl: helper.basepath('dashboard.html'),
-                resolve: helper.resolveFor('flot-chart', 'flot-chart-plugins')//resolve指定当前controller所依赖的其他模块
+                resolve: helper.resolveFor('flot-chart', 'flot-chart-plugins'),//resolve指定当前controller所依赖的其他模块
+                controller: ["$rootScope", "$scope", "$http", 'toaster', '$state', function ($rootScope, $scope, $http, toaster, $state) {
+                    $http.get('/getUserInfo').success(function (data) {
+                        $rootScope.user = data;
+                        $rootScope.user.picture = 'app/img/user/02.jpg'
+                    }).error(function (data, status, headers, config) {
+                        $state.go('page.login');
+                        toaster.pop('error', null, data.message);
+                    });
+                }]
             })
             .state('app.dashboard_v2', {
                 url: '/dashboard_v2',
@@ -620,33 +680,7 @@ App.config(['$stateProvider', '$locationProvider', '$urlRouterProvider', 'RouteH
                     $rootScope.app.layout.isBoxed = false;
                 }]
             })
-            .state('page.login', {
-                url: '/login',
-                title: "Login",
-                templateUrl: 'app/pages/login.html'
-            })
-            .state('page.register', {
-                url: '/register',
-                title: "Register",
-                templateUrl: 'app/pages/register.html',
-                resolve: helper.resolveFor('toaster'),
-            })
-            .state('page.recover', {
-                url: '/recover',
-                title: "Recover",
-                templateUrl: 'app/pages/recover.html',
-                resolve: helper.resolveFor('toaster'),
-            })
-            .state('page.lock', {
-                url: '/lock',
-                title: "Lock",
-                templateUrl: 'app/pages/lock.html'
-            })
-            .state('page.404', {
-                url: '/404',
-                title: "Not Found",
-                templateUrl: 'app/pages/404.html'
-            })
+
             // 
             // Horizontal layout
             // ----------------------------------- 
@@ -935,7 +969,10 @@ App
                 name: 'ng-nestable', files: ['vendor/ng-nestable/src/angular-nestable.js',
                 'vendor/nestable/jquery.nestable.js']
             },
-            {name: 'akoenig.deckgrid', files: ['vendor/angular-deckgrid/angular-deckgrid.js']}
+            {name: 'akoenig.deckgrid', files: ['vendor/angular-deckgrid/angular-deckgrid.js']},
+            {
+                name: 'treeitem', files: ['vendor/tree/tree.js']
+            }
         ]
     })
 ;
@@ -2794,6 +2831,177 @@ App.controller('PaginationDemoCtrl', ['$scope', function ($scope) {
     $scope.bigCurrentPage = 1;
 }]);
 /**=========================================================
+ * Module: 菜单管理
+ * Provides 菜单查询、新增、编辑、删除
+ =========================================================*/
+
+App.controller('menuController', ['$scope', '$http', 'toaster', 'ngDialog', '$state', function ($scope, $http, toaster, ngDialog, $state) {
+
+    $scope.menuIdArr = [];
+    $scope.menu = {};
+    $scope.isExpendArr = [];
+
+    /**
+     * 存储哪些菜单展开
+     */
+    $scope.storeMenuExpend = function (menuTree) {
+        if (!menuTree || menuTree.length <= 0) {
+            return;
+        }
+        var len = menuTree.length;
+        for (var i = 0; i < len; i++) {
+            if (!!menuTree[i].$$isExpend) {
+                $scope.isExpendArr.push(menuTree[i].id);
+            }
+            $scope.storeMenuExpend(menuTree[i].childMenu);
+        }
+    };
+
+    /**
+     * 初始化菜单展开
+     */
+    $scope.initMenuExpend = function (menuTree) {
+        if (!menuTree || menuTree.length <= 0) {
+            return;
+        }
+        var len = menuTree.length;
+        for (var i = 0; i < len; i++) {
+            if ($scope.isExpendArr.includes(menuTree[i].id)) {
+                menuTree[i].$$isExpend = true;
+            }
+            $scope.initMenuExpend(menuTree[i].childMenu);
+        }
+    };
+
+    /**
+     * 加载菜单
+     */
+    $scope.listMenus = function () {
+        $http.get('/menu/getAllMenu')
+            .success(function (items) {
+                $scope.tree = items;
+                $scope.initMenuExpend($scope.tree);
+            })
+            .error(function (data, status, headers, config) {
+                alert('Failure loading menu');
+            });
+    };
+    $scope.listMenus();
+
+    /**
+     * 刷新菜单
+     */
+    $scope.refreshMenus = function () {
+        $scope.storeMenuExpend($scope.tree);
+        $scope.listMenus();
+    };
+
+    /**
+     *
+     * @param $item
+     */
+    $scope.itemClicked = function ($item) {
+        if (!!$item.menuOperate) {
+            $item.menuOperate = false;
+        } else {
+            $item.menuOperate = true;
+        }
+
+        $scope.selectedItem = $item;
+    };
+
+    $scope.initMenu = function () {
+        $scope.menu = {};
+    };
+
+    /**
+     * 新建菜单
+     * @param $item
+     */
+    $scope.addMenu = function ($item) {
+        $scope.menu = {};
+        $scope.menu.parentId = !$item ? 0 : $item.id;
+        $scope.menu.parentMenuName = !$item ? "无父菜单" : $item.menuName;
+        $scope.menu.level = (!$item ? 0 : $item.level) + 1;
+    };
+
+    /**
+     * 修改菜单
+     * @param $item
+     */
+    $scope.editMenu = function ($item) {
+        $scope.menu = $item;
+        $scope.menu.parentMenuName = !$item.parentMenuName ? "无父菜单" : $item.parentMenuName;
+    };
+
+    $scope.saveOrUpdateMenu = function () {
+        var data = {
+            id: $scope.menu.id,
+            menuName: $scope.menu.menuName,
+            parentId: $scope.menu.parentId,
+            parentMenuName: $scope.menu.parentMenuName,
+            level: $scope.menu.level,
+            sorting: $scope.menu.sorting,
+            url: $scope.menu.url,
+            icon: $scope.menu.icon,
+        };
+
+        var url = $scope.menu.id == undefined ? '/menu/save' : '/menu/update';
+        $http
+            .post(url, data)
+            .success(function (data, status, headers, config) {
+                $scope.isExpendArr = [];
+                $scope.storeMenuExpend($scope.tree);
+                $('#saveOrUpdateDialog').modal('hide');
+                toaster.pop('success', null, data.message);
+                $scope.menu = {};
+                $scope.listMenus();
+            }).error(function (data, status, headers, config) {
+                toaster.pop('error', null, data.message);
+            });
+    };
+
+    /**
+     * 确认弹出框
+     */
+    $scope.removeMenu = function (item) {
+        $scope.deleteContent = "确认删除吗";
+        ngDialog.openConfirm({
+            template: 'deleteConfirmDialogId',
+            className: 'ngdialog-theme-default',//ngdialog-theme-plain ngdialog-theme-default
+            scope: $scope
+        }).then(function (value) {
+            //删除
+            $scope.deleteMenu(item.id);
+        });
+    };
+
+    /**
+     * 删除菜单
+     * @param $item
+     */
+    $scope.deleteMenu = function (id) {
+        var data = {
+            id: id
+        };
+        $http
+            .post('/menu/removeMenu', data)
+            .success(function (data, status, headers, config) {
+                $scope.isExpendArr = [];
+                $scope.storeMenuExpend($scope.tree);
+                toaster.pop('success', null, data.message);
+                $scope.listMenus();
+            }).error(function (data, status, headers, config) {
+                toaster.pop('error', null, data.message);
+            });
+    };
+
+    $scope.getIcons = function () {
+        $state.go("app.icons-font")
+    };
+
+}]);
+/**=========================================================
  * Module: 角色管理
  * Provides 角色查询、新增、编辑、删除
  =========================================================*/
@@ -2801,19 +3009,24 @@ App.controller('PaginationDemoCtrl', ['$scope', function ($scope) {
 App.controller('RoleController', ['$scope', '$http', 'toaster', 'ngDialog', function ($scope, $http, toaster, ngDialog) {
     $scope.pageSize = 10;//列表分页每页数
     $scope.currentPage = 1;
+    $scope.role = {};
 
     $scope.handleParam = function (value) {
-        if(value == undefined || value == null){
+        if (value == undefined || value == null) {
             return '';
         }
         return value;
-    }
+    };
+
+    $scope.initRole = function () {
+        $scope.role = {};
+    };
+
     /**
      * 查询角色列表
      */
     $scope.listRoles = function () {
         $scope.loading = true;
-        $scope.totalItems = -1;
         $scope.roles = [];
         var listUrl = '/role/listRoles';
         var pageParam = '&pageSize=' + $scope.pageSize + '&curPage=' + $scope.currentPage
@@ -2836,59 +3049,57 @@ App.controller('RoleController', ['$scope', '$http', 'toaster', 'ngDialog', func
     };
 
     /**
-     * 新增、编辑弹出框
+     * 确认弹出框
      */
-    $scope.openConfirm = function () {
+    $scope.openConfirm = function (id) {
+        $scope.deleteContent = "确认删除吗";
         ngDialog.openConfirm({
-            template: 'modalDialogId',
-            className: 'ngdialog-theme-default'//ngdialog-theme-plain ngdialog-theme-default
+            template: 'deleteConfirmDialogId',
+            className: 'ngdialog-theme-default',//ngdialog-theme-plain ngdialog-theme-default
+            scope: $scope
         }).then(function (value) {
-            //return;
-            $scope.saveRole();
-            console.log('Modal promise resolved. Value: ', value);
-        }, function (reason) {
-            console.log('Modal promise rejected. Reason: ', reason);
+            //删除
+            $scope.removeRole(id);
         });
     };
 
+
     /**
-     * 保存角色
+     * 新增和修改角色
      */
     $scope.saveRole = function () {
+        var data = {
+            id: $scope.role.id,
+            roleName: $scope.role.roleName,
+            dataLevel: 1,
+            smsVerify: 1,
+            assignAuthority: 1
+        };
 
-        ngDialog.close();
+        var url = $scope.role.id == undefined ? '/role/save' : '/role/update';
+        $http
+            .post(url, data)
+            .success(function (data, status, headers, config) {
+                $('#saveOrUpdateRoleDialog').modal('hide');
+                toaster.pop('success', null, data.message);
+                $scope.role = {};
+                $scope.listRoles();
+            }).error(function (data, status, headers, config) {
+                toaster.pop('error', null, data.message);
+            });
+    };
 
-        $scope.authMsg = '';
-
-        //if ($scope.roleForm.$valid) {
-            var data = {
-                roleName:'hahah',
-                dataLevel:1,
-                smsVerify:1,
-                assignAuthority:1
-            };
-            $http
-                .post('/role/save', data)
-                .success(function (data, status, headers, config) {
-                    // $state.go('page.login');
-                    toaster.pop('success', null, data.message);
-                    $scope.listRoles();
-                    //$timeout(function(){
-                    //    $state.go('page.login');
-                    //},3000);
-                    //$scope.authMsg = data.message;
-                }).error(function (data, status, headers, config) {
-                    toaster.pop('error', null, data.message);
-                });
-        //}
-        //else {
-        //    //// set as dirty if the user click directly to login so we show the validation messages
-        //    //$scope.registerForm.account_username.$dirty = true;
-        //    //$scope.registerForm.account_email.$dirty = true;
-        //    //$scope.registerForm.account_password.$dirty = true;
-        //    //// $scope.registerForm.account_agreed.$dirty = true;
-        //    $scope.roleForm.roleName.$dirty = true;
-        //}
+    /**
+     * 查询角色
+     */
+    $scope.getRole = function (roleId) {
+        var listUrl = '/role/listRoles';
+        var listParam = '?time=' + (new Date().getTime()) + "&id=" + roleId;
+        $http.get(listUrl + listParam).success(function (data) {
+            $scope.role = data.resultList[0];
+        }).error(function (data, status, headers, config) {
+            toaster.pop('error', null, data.message);
+        });
     };
 
     /**
@@ -2896,7 +3107,7 @@ App.controller('RoleController', ['$scope', '$http', 'toaster', 'ngDialog', func
      */
     $scope.removeRole = function (id) {
         var data = {
-            id:id
+            id: id
         };
         $http
             .post('/role/removeRole', data)
@@ -2906,6 +3117,406 @@ App.controller('RoleController', ['$scope', '$http', 'toaster', 'ngDialog', func
             }).error(function (data, status, headers, config) {
                 toaster.pop('error', null, data.message);
             });
+    };
+
+
+    //添加菜单权限
+    $scope.menuIdArr = [];
+    $scope.menu = {};
+    $scope.isExpendArr = [];
+
+    $scope.setMenus = function (id) {
+        $scope.roleId = id;
+    };
+
+    /**
+     * 存储哪些菜单展开
+     */
+    $scope.storeMenuExpend = function (menuTree) {
+        if (!menuTree || menuTree.length <= 0) {
+            return;
+        }
+        var len = menuTree.length;
+        for (var i = 0; i < len; i++) {
+            if (!!menuTree[i].$$isExpend) {
+                $scope.isExpendArr.push(menuTree[i].id);
+            }
+            $scope.storeMenuExpend(menuTree[i].childMenu);
+        }
+    };
+
+    /**
+     * 初始化菜单展开
+     */
+    $scope.initMenuExpend = function (menuTree) {
+        if (!menuTree || menuTree.length <= 0) {
+            return;
+        }
+        var len = menuTree.length;
+        for (var i = 0; i < len; i++) {
+            if ($scope.isExpendArr.includes(menuTree[i].id)) {
+                menuTree[i].$$isExpend = true;
+            }
+            $scope.initMenuExpend(menuTree[i].childMenu);
+        }
+    };
+
+    /**
+     * 加载菜单
+     */
+    $scope.listMenus = function () {
+        $http.get('/menu/getAllMenu')
+            .success(function (items) {
+                $scope.tree = items;
+                $scope.initMenuExpend($scope.tree);
+            })
+            .error(function (data, status, headers, config) {
+                alert('Failure loading menu');
+            });
+    };
+    $scope.listMenus();
+
+    /**
+     * 刷新菜单
+     */
+    $scope.refreshMenus = function () {
+        $scope.storeMenuExpend($scope.tree);
+        $scope.listMenus();
+    };
+
+    /**
+     * 选中
+     * @param item
+     * @param checked
+     */
+    $scope.selectId = function (item, checked) {
+        var index = $scope.menuIdArr.indexOf(item.id);
+        if (checked && index < 0) {
+            $scope.menuIdArr.push(item.id)
+        } else if (!checked && index > -1) {
+            $scope.menuIdArr.splice(index);
+        }
+        item.$$isChecked = checked;
+
+        if (!item.childMenu) {
+            return;
+        }
+        var children = item.childMenu;
+        var len = children.length;
+        for (var i = 0; i < len; i++) {
+            $scope.selectId(children[i], checked);
+        }
+    };
+
+    /**
+     * 添加菜单
+     *
+     * @param item
+     */
+    $scope.itemCheckedChanged = function (item) {
+        $scope.menuIdArr = [];
+        $scope.selectId(item, item.$$isChecked);
+
+        var data = {
+            id: $scope.roleId,
+            menuIds: $scope.menuIdArr
+        };
+        var url = item.$$isChecked ? '/role/addMenuPermission' : '/role/removeMenuPermission';
+        $http
+            .post(url, data)
+            .success(function (data, status, headers, config) {
+                toaster.pop('success', null, data.message);
+                $scope.listRoles();
+            }).error(function (data, status, headers, config) {
+                toaster.pop('error', null, data.message);
+            });
+    };
+
+    $scope.initMenu = function () {
+        $scope.menu = {};
+    };
+
+
+}]);
+
+/**=========================================================
+ * Module: 系统用户管理
+ * Provides 系统用户查询、新增、编辑、删除
+ =========================================================*/
+
+App.controller('SysUserController', ['$scope', '$http', 'toaster', 'ngDialog', function ($scope, $http, toaster, ngDialog) {
+    $scope.pageSize = 10;//列表分页每页数
+    $scope.currentPage = 1;
+    $scope.sysUser = {};
+
+    $scope.handleParam = function (value) {
+        if (value == undefined || value == null) {
+            return '';
+        }
+        return value;
+    };
+
+    $scope.initSysUser = function () {
+        $scope.sysUser = {};
+    };
+
+    /**
+     * 查询角色列表
+     */
+    $scope.listSysUsers = function () {
+        $scope.loading = true;
+        //$scope.totalItems = -1;
+        $scope.sysUsers = [];
+        var listUrl = '/sysUser/list';
+        var pageParam = '&pageSize=' + $scope.pageSize + '&curPage=' + $scope.currentPage
+        var listParam = '?time=' + (new Date().getTime())
+            + "&userName=" + $scope.handleParam($scope.searchName)
+            + "&email=" + $scope.handleParam($scope.searchEmail)
+            + "&phoneNo=" + $scope.handleParam($scope.searchPhoneNo);
+        console.log(listParam);
+        $http.get(listUrl + listParam + pageParam).success(function (data) {
+            $scope.loading = false;
+            $scope.totalItems = data.totalCount;
+            $scope.sysUsers = data.resultList;
+            //
+            $scope.getAllRole();
+        }).error(function (data, status, headers, config) {
+            toaster.pop('error', null, data.message);
+        });
+    };
+
+    //查询
+    $scope.listSysUsers();
+    $scope.pageChanged = function () {
+        $scope.listSysUsers();
+    };
+
+    /**
+     * 确认弹出框
+     */
+    $scope.openConfirm = function (id) {
+        $scope.deleteContent = "确认删除吗";
+        ngDialog.openConfirm({
+            template: 'deleteConfirmDialogId',
+            className: 'ngdialog-theme-default',//ngdialog-theme-plain ngdialog-theme-default
+            scope: $scope
+        }).then(function (value) {
+            //删除
+            $scope.removeSysUser(id);
+        });
+    };
+
+
+    /**
+     * 新增和修改角色
+     */
+    $scope.saveSysUser = function () {
+        var data = {
+            id: $scope.sysUser.id,
+            roleId: $scope.role.id,
+            userName: $scope.sysUser.userName,
+            email: $scope.sysUser.email,
+            phoneNo: $scope.sysUser.phoneNo
+        };
+
+        var url = $scope.sysUser.id == undefined ? '/sysUser/save' : '/sysUser/update';
+        $http
+            .post(url, data)
+            .success(function (data, status, headers, config) {
+                $('#saveOrUpdateSysUserDialog').modal('hide');
+                toaster.pop('success', null, data.message);
+                $scope.sysUser = {};
+                $scope.listSysUsers();
+            }).error(function (data, status, headers, config) {
+                toaster.pop('error', null, data.message);
+            });
+    };
+
+    /**
+     * 查询系统用户
+     */
+    $scope.getSysUser = function (sysUserId) {
+        var listUrl = '/sysUser/list';
+        var listParam = '?time=' + (new Date().getTime()) + "&id=" + sysUserId;
+        $http.get(listUrl + listParam).success(function (data) {
+            $scope.sysUser = data.resultList[0];
+            $scope.setRole($scope.sysUser);
+        }).error(function (data, status, headers, config) {
+            toaster.pop('error', null, data.message);
+        });
+    };
+
+    $scope.setRole = function (role) {
+        $scope.role = {};
+        if (!role) {
+            return;
+        }
+        var len = $scope.roles.length;
+        for (var i = 0; i < len; i++) {
+            if (role.roleId == $scope.roles[i].id) {
+                $scope.role = $scope.roles[i];
+                break;
+            }
+        }
+    };
+
+    /**
+     * 查询系统用户
+     */
+    $scope.getAllRole = function () {
+        var listUrl = '/role/findAllRoles';
+        $http.get(listUrl).success(function (data) {
+            $scope.roles = data;
+        }).error(function (data, status, headers, config) {
+            toaster.pop('error', null, data.message);
+        });
+    };
+
+
+    /**
+     * 删除系统用户
+     */
+    $scope.removeSysUser = function (id) {
+        var data = {
+            id: id
+        };
+        $http
+            .post('/sysUser/remove', data)
+            .success(function (data, status, headers, config) {
+                toaster.pop('success', null, data.message);
+                $scope.listSysUsers();
+            }).error(function (data, status, headers, config) {
+                toaster.pop('error', null, data.message);
+            });
+    };
+
+}]);
+
+
+/**=========================================================
+ * Module: 注册用户管理
+ * Provides 用户查询、禁用、启用、重置密码
+ =========================================================*/
+
+App.controller('UserController', ['$scope', '$http', 'toaster', 'ngDialog', function ($scope, $http, toaster, ngDialog) {
+    $scope.pageSize = 10;//列表分页每页数
+    $scope.currentPage = 1;
+    $scope.user = {};
+
+    $scope.handleParam = function (value) {
+        if (value == undefined || value == null) {
+            return '';
+        }
+        return value;
+    };
+
+    $scope.initUser = function () {
+        $scope.user = {};
+    };
+
+    /**
+     * 查询角色列表
+     */
+    $scope.listUsers = function () {
+        $scope.loading = true;
+        $scope.users = [];
+        var listUrl = '/admin/user/listUsers';
+        var pageParam = '&pageSize=' + $scope.pageSize + '&curPage=' + $scope.currentPage
+        var listParam = '?time=' + (new Date().getTime())
+            + "&id=" + $scope.handleParam($scope.searchUserId)
+            + "&userName=" + $scope.handleParam($scope.searchUserName)
+            + "&email=" + $scope.handleParam($scope.searchEmail)
+            + "&phoneNo=" + $scope.handleParam($scope.searchPhoneNo);
+        console.log(listParam);
+        $http.get(listUrl + listParam + pageParam).success(function (data) {
+            $scope.loading = false;
+            $scope.totalItems = data.totalCount;
+            $scope.users = data.resultList;
+        }).error(function (data, status, headers, config) {
+            toaster.pop('error', null, data.message);
+        });
+    };
+
+    //查询
+    $scope.listUsers();
+    $scope.pageChanged = function () {
+        $scope.listUsers();
+    };
+
+    /**
+     * 确认弹出框
+     */
+    $scope.openConfirm = function (id) {
+        $scope.deleteContent = "确认删除吗";
+        ngDialog.openConfirm({
+            template: 'deleteConfirmDialogId',
+            className: 'ngdialog-theme-default',//ngdialog-theme-plain ngdialog-theme-default
+            scope: $scope
+        }).then(function (value) {
+            //删除
+            $scope.removeUser(id);
+        });
+    };
+
+
+    /**
+     * 启用或禁用用户
+     */
+    $scope.enOrDisableUser = function (user) {
+        if (user.status == 0) {
+            $scope.deleteContent = "确认禁用该用户吗？";
+        } else {
+            $scope.deleteContent = "确认启用该用户吗？";
+        }
+
+        ngDialog.openConfirm({
+            template: 'deleteConfirmDialogId',
+            className: 'ngdialog-theme-default',//ngdialog-theme-plain ngdialog-theme-default
+            scope: $scope
+        }).then(function (value) {
+            var data = {
+                id: user.id,
+                status: user.status == 0 ? 1 : 0
+            };
+
+            var url = user.status == 0 ? '/admin/user/disableUser' : '/admin/user/enableUser';
+            $http
+                .post(url, data)
+                .success(function (data, status, headers, config) {
+                    toaster.pop('success', null, data.message);
+                    $scope.listUsers();
+                }).error(function (data, status, headers, config) {
+                    toaster.pop('error', null, data.message);
+                });
+        });
+    };
+
+    /**
+     * 重置密码
+     */
+    $scope.resetPassword = function (id) {
+
+        $scope.deleteContent = "确认重置密码吗？";
+
+        ngDialog.openConfirm({
+            template: 'deleteConfirmDialogId',
+            className: 'ngdialog-theme-default',//ngdialog-theme-plain ngdialog-theme-default
+            scope: $scope
+        }).then(function (value) {
+            var data = {
+                id: id
+            };
+
+            var url = '/admin/user/resetPassword';
+            $http
+                .post(url, data)
+                .success(function (data, status, headers, config) {
+                    toaster.pop('success', null, data.message);
+                    $scope.listUsers();
+                }).error(function (data, status, headers, config) {
+                    toaster.pop('error', null, data.message);
+                });
+        });
     };
 
 }]);
@@ -4347,7 +4958,7 @@ App.controller('ChartMorrisController', ['$scope', '$timeout', 'colors', functio
  * Demo for login api
  =========================================================*/
 
-App.controller('AbnTestController', ['$scope', '$timeout', '$resource', function ($scope, $timeout, $resource) {
+App.controller('AbnTestController', ['$scope', '$timeout', '$resource', '$http', function ($scope, $timeout, $resource, $http) {
 
     $scope.my_tree_handler = function (branch) {
 
@@ -4445,7 +5056,7 @@ App.controller('AbnTestController', ['$scope', '$timeout', '$resource', function
 
     var treedata_geography = [
         {
-            label: 'North America',
+            label: 'North1 America',
             children: [
                 {
                     label: 'Canada',
@@ -4496,9 +5107,21 @@ App.controller('AbnTestController', ['$scope', '$timeout', '$resource', function
         // Request tree data via $resource
         var remoteTree = $resource('server/treedata.json');
 
-        return remoteTree.get(function (res) {
+        //var menuJson = '/menu/getRoleMenu',
+        //    menuURL = menuJson + '?v=' + (new Date().getTime()); // jumps cache
+        //$http.get(menuURL)
+        //    .success(function (items) {debugger
+        //        $scope.my_data = items;
+        //
+        //    })
+        //    .error(function (data, status, headers, config) {
+        //        alert('Failure loading menu');
+        //    });
 
-            $scope.my_data = res.data;
+        return remoteTree.get(function (res) {
+            debugger
+
+            $scope.my_data = remoteTree;
 
             $scope.doing_async = false;
 
@@ -4528,366 +5151,366 @@ App.controller('AbnTestController', ['$scope', '$timeout', '$resource', function
  * Module: nestable.js
  * Nestable controller
  =========================================================*/
-
-App.controller('NestableController', ['$scope', function ($scope) {
-
-    'use strict';
-
-    $scope.items = [
-        {
-            item: {text: 'a'},
-            children: []
-        },
-        {
-            item: {text: 'b'},
-            children: [
-                {
-                    item: {text: 'c'},
-                    children: []
-                },
-                {
-                    item: {text: 'd'},
-                    children: []
-                }
-            ]
-        },
-        {
-            item: {text: 'e'},
-            children: []
-        },
-        {
-            item: {text: 'f'},
-            children: []
-        }
-    ];
-
-    $scope.items2 = [
-        {
-            item: {text: '1'},
-            children: []
-        },
-        {
-            item: {text: '2'},
-            children: [
-                {
-                    item: {text: '3'},
-                    children: []
-                },
-                {
-                    item: {text: '4'},
-                    children: []
-                }
-            ]
-        },
-        {
-            item: {text: '5'},
-            children: []
-        },
-        {
-            item: {text: '6'},
-            children: []
-        }
-    ]
-
-
-}]);
+//
+//App.controller('NestableController', ['$scope', function ($scope) {
+//
+//    'use strict';
+//
+//    $scope.items = [
+//        {
+//            item: {text: 'a'},
+//            children: []
+//        },
+//        {
+//            item: {text: 'b'},
+//            children: [
+//                {
+//                    item: {text: 'c'},
+//                    children: []
+//                },
+//                {
+//                    item: {text: 'd'},
+//                    children: []
+//                }
+//            ]
+//        },
+//        {
+//            item: {text: 'e'},
+//            children: []
+//        },
+//        {
+//            item: {text: 'f'},
+//            children: []
+//        }
+//    ];
+//
+//    $scope.items2 = [
+//        {
+//            item: {text: '1'},
+//            children: []
+//        },
+//        {
+//            item: {text: '2'},
+//            children: [
+//                {
+//                    item: {text: '3'},
+//                    children: []
+//                },
+//                {
+//                    item: {text: '4'},
+//                    children: []
+//                }
+//            ]
+//        },
+//        {
+//            item: {text: '5'},
+//            children: []
+//        },
+//        {
+//            item: {text: '6'},
+//            children: []
+//        }
+//    ]
+//
+//
+//}]);
 
 /**=========================================================
  * Module: ng-grid.js
  * ngGrid demo
  =========================================================*/
-
-App.controller('NGGridController', ['$scope', '$http', '$timeout', function ($scope, $http, $timeout) {
-
-    $scope.filterOptions = {
-        filterText: "",
-        useExternalFilter: true
-    };
-    $scope.totalServerItems = 0;
-    $scope.pagingOptions = {
-        pageSizes: [50, 500, 1000],  // page size options
-        pageSize: 50,              // default page size
-        currentPage: 1                 // initial page
-    };
-
-    $scope.gridOptions = {
-        data: 'myData',
-        enablePaging: true,
-        showFooter: true,
-        rowHeight: 36,
-        headerRowHeight: 38,
-        totalServerItems: 'totalServerItems',
-        pagingOptions: $scope.pagingOptions,
-        filterOptions: $scope.filterOptions,
-        columnDefs: [{field: 'name', displayName: '名称', width: "*", resizable: false},
-            {field: 'amount', displayName: '数量', width: "20%"},
-            {field: 'status', displayName: '状态', cellClass: 'ageCell', headerCellClass: 'ageHeader', width: "**"},
-            {
-                displayName: '操作',
-                cellTemplate: '<button id="editBtn" type="button" class="btn-small" ng-click="edit()" >Edit</button> ',
-                width: "**"
-            }
-        ]
-    };
-
-    $scope.setPagingData = function (data, page, pageSize) {
-        // calc for pager
-        var pagedData = data.slice((page - 1) * pageSize, page * pageSize);
-        // Store data from server
-        $scope.myData = pagedData;
-        // Update server side data length
-        $scope.totalServerItems = data.length;
-
-        if (!$scope.$$phase) {
-            $scope.$apply();
-        }
-
-    };
-
-    $scope.getPagedDataAsync = function (pageSize, page, searchText) {
-        debugger
-        var ngGridResourcePath = 'server/ng-grid-data.json';
-
-        $timeout(function () {
-
-            if (searchText) {
-                var ft = searchText.toLowerCase();
-                $http.get(ngGridResourcePath).success(function (largeLoad) {
-                    var data = largeLoad.filter(function (item) {
-                        return JSON.stringify(item).toLowerCase().indexOf(ft) != -1;
-                    });
-                    $scope.setPagingData(data, page, pageSize);
-                });
-            } else {
-                $http.get(ngGridResourcePath).success(function (largeLoad) {
-                    $scope.setPagingData(largeLoad, page, pageSize);
-                });
-            }
-        }, 100);
-    };
-
-
-    $scope.$watch('pagingOptions', function (newVal, oldVal) {
-        if (newVal !== oldVal && newVal.currentPage !== oldVal.currentPage) {
-            $scope.getPagedDataAsync($scope.pagingOptions.pageSize, $scope.pagingOptions.currentPage, $scope.filterOptions.filterText);
-        }
-    }, true);
-    $scope.$watch('filterOptions', function (newVal, oldVal) {
-        if (newVal !== oldVal) {
-            $scope.getPagedDataAsync($scope.pagingOptions.pageSize, $scope.pagingOptions.currentPage, $scope.filterOptions.filterText);
-        }
-    }, true);
-
-    $scope.getPagedDataAsync($scope.pagingOptions.pageSize, $scope.pagingOptions.currentPage);
-
-}]);
+//
+//App.controller('NGGridController', ['$scope', '$http', '$timeout', function ($scope, $http, $timeout) {
+//
+//    $scope.filterOptions = {
+//        filterText: "",
+//        useExternalFilter: true
+//    };
+//    $scope.totalServerItems = 0;
+//    $scope.pagingOptions = {
+//        pageSizes: [50, 500, 1000],  // page size options
+//        pageSize: 50,              // default page size
+//        currentPage: 1                 // initial page
+//    };
+//
+//    $scope.gridOptions = {
+//        data: 'myData',
+//        enablePaging: true,
+//        showFooter: true,
+//        rowHeight: 36,
+//        headerRowHeight: 38,
+//        totalServerItems: 'totalServerItems',
+//        pagingOptions: $scope.pagingOptions,
+//        filterOptions: $scope.filterOptions,
+//        columnDefs: [{field: 'name', displayName: '名称', width: "*", resizable: false},
+//            {field: 'amount', displayName: '数量', width: "20%"},
+//            {field: 'status', displayName: '状态', cellClass: 'ageCell', headerCellClass: 'ageHeader', width: "**"},
+//            {
+//                displayName: '操作',
+//                cellTemplate: '<button id="editBtn" type="button" class="btn-small" ng-click="edit()" >Edit</button> ',
+//                width: "**"
+//            }
+//        ]
+//    };
+//
+//    $scope.setPagingData = function (data, page, pageSize) {
+//        // calc for pager
+//        var pagedData = data.slice((page - 1) * pageSize, page * pageSize);
+//        // Store data from server
+//        $scope.myData = pagedData;
+//        // Update server side data length
+//        $scope.totalServerItems = data.length;
+//
+//        if (!$scope.$$phase) {
+//            $scope.$apply();
+//        }
+//
+//    };
+//
+//    $scope.getPagedDataAsync = function (pageSize, page, searchText) {
+//        debugger
+//        var ngGridResourcePath = 'server/ng-grid-data.json';
+//
+//        $timeout(function () {
+//
+//            if (searchText) {
+//                var ft = searchText.toLowerCase();
+//                $http.get(ngGridResourcePath).success(function (largeLoad) {
+//                    var data = largeLoad.filter(function (item) {
+//                        return JSON.stringify(item).toLowerCase().indexOf(ft) != -1;
+//                    });
+//                    $scope.setPagingData(data, page, pageSize);
+//                });
+//            } else {
+//                $http.get(ngGridResourcePath).success(function (largeLoad) {
+//                    $scope.setPagingData(largeLoad, page, pageSize);
+//                });
+//            }
+//        }, 100);
+//    };
+//
+//
+//    $scope.$watch('pagingOptions', function (newVal, oldVal) {
+//        if (newVal !== oldVal && newVal.currentPage !== oldVal.currentPage) {
+//            $scope.getPagedDataAsync($scope.pagingOptions.pageSize, $scope.pagingOptions.currentPage, $scope.filterOptions.filterText);
+//        }
+//    }, true);
+//    $scope.$watch('filterOptions', function (newVal, oldVal) {
+//        if (newVal !== oldVal) {
+//            $scope.getPagedDataAsync($scope.pagingOptions.pageSize, $scope.pagingOptions.currentPage, $scope.filterOptions.filterText);
+//        }
+//    }, true);
+//
+//    $scope.getPagedDataAsync($scope.pagingOptions.pageSize, $scope.pagingOptions.currentPage);
+//
+//}]);
 
 /**=========================================================
  * Module: NGTableCtrl.js
  * Controller for ngTables
  =========================================================*/
 
-App.controller('NGTableCtrl', NGTableCtrl);
-
-function NGTableCtrl($scope, $filter, ngTableParams, $resource, $timeout, ngTableDataService) {
-    'use strict';
-    // required for inner references
-    var vm = this;
-
-
-    var data = [
-        {name: "Moroni", age: 50, money: -10},
-        {name: "Tiancum", age: 43, money: 120},
-        {name: "Jacob", age: 27, money: 5.5},
-        {name: "Nephi", age: 29, money: -54},
-        {name: "Enos", age: 34, money: 110},
-        {name: "Tiancum", age: 43, money: 1000},
-        {name: "Jacob", age: 27, money: -201},
-        {name: "Nephi", age: 29, money: 100},
-        {name: "Enos", age: 34, money: -52.5},
-        {name: "Tiancum", age: 43, money: 52.1},
-        {name: "Jacob", age: 27, money: 110},
-        {name: "Nephi", age: 29, money: -55},
-        {name: "Enos", age: 34, money: 551},
-        {name: "Tiancum", age: 43, money: -1410},
-        {name: "Jacob", age: 27, money: 410},
-        {name: "Nephi", age: 29, money: 100},
-        {name: "Enos", age: 34, money: -100}
-    ];
-
-    // SELECT ROWS
-    // ----------------------------------- 
-
-    vm.data = data;
-
-    vm.tableParams3 = new ngTableParams({
-        page: 1,            // show first page
-        count: 10          // count per page
-    }, {
-        total: data.length, // length of data
-        getData: function ($defer, params) {
-            // use build-in angular filter
-            var filteredData = params.filter() ?
-                $filter('filter')(data, params.filter()) :
-                data;
-            var orderedData = params.sorting() ?
-                $filter('orderBy')(filteredData, params.orderBy()) :
-                data;
-
-            params.total(orderedData.length); // set total for recalc pagination
-            $defer.resolve(orderedData.slice((params.page() - 1) * params.count(), params.page() * params.count()));
-        }
-    });
-
-    vm.changeSelection = function (user) {
-        // console.info(user);
-    };
-
-    // EXPORT CSV
-    // -----------------------------------  
-
-    var data4 = [{name: "Moroni", age: 50},
-        {name: "Tiancum", age: 43},
-        {name: "Jacob", age: 27},
-        {name: "Nephi", age: 29},
-        {name: "Enos", age: 34},
-        {name: "Tiancum", age: 43},
-        {name: "Jacob", age: 27},
-        {name: "Nephi", age: 29},
-        {name: "Enos", age: 34},
-        {name: "Tiancum", age: 43},
-        {name: "Jacob", age: 27},
-        {name: "Nephi", age: 29},
-        {name: "Enos", age: 34},
-        {name: "Tiancum", age: 43},
-        {name: "Jacob", age: 27},
-        {name: "Nephi", age: 29},
-        {name: "Enos", age: 34}];
-
-    vm.tableParams4 = new ngTableParams({
-        page: 1,            // show first page
-        count: 10           // count per page
-    }, {
-        total: data4.length, // length of data4
-        getData: function ($defer, params) {
-            $defer.resolve(data4.slice((params.page() - 1) * params.count(), params.page() * params.count()));
-        }
-    });
-
-
-    // SORTING
-    // ----------------------------------- 
-
-
-    vm.tableParams = new ngTableParams({
-        page: 1,            // show first page
-        count: 10,          // count per page
-        sorting: {
-            name: 'asc'     // initial sorting
-        }
-    }, {
-        total: data.length, // length of data
-        getData: function ($defer, params) {
-            // use build-in angular filter
-            var orderedData = params.sorting() ?
-                $filter('orderBy')(data, params.orderBy()) :
-                data;
-
-            $defer.resolve(orderedData.slice((params.page() - 1) * params.count(), params.page() * params.count()));
-        }
-    });
-
-    // FILTERS
-    // ----------------------------------- 
-
-    vm.tableParams2 = new ngTableParams({
-        page: 1,            // show first page
-        count: 10,          // count per page
-        filter: {
-            name: '',
-            age: ''
-            // name: 'M'       // initial filter
-        }
-    }, {
-        total: data.length, // length of data
-        getData: function ($defer, params) {
-            // use build-in angular filter
-            var orderedData = params.filter() ?
-                $filter('filter')(data, params.filter()) :
-                data;
-
-            vm.users = orderedData.slice((params.page() - 1) * params.count(), params.page() * params.count());
-
-            params.total(orderedData.length); // set total for recalc pagination
-            $defer.resolve(vm.users);
-        }
-    });
-
-    // AJAX
-
-    var Api = $resource('server/table-data.json');
-
-    vm.tableParams5 = new ngTableParams({
-        page: 1,            // show first page
-        count: 10           // count per page
-    }, {
-        total: 0,           // length of data
-        counts: [],         // hide page counts control
-        getData: function ($defer, params) {
-
-            // Service using cache to avoid mutiple requests
-            ngTableDataService.getData($defer, params, Api);
-
-            /* direct ajax request to api (perform result pagination on the server)
-             Api.get(params.url(), function(data) {
-             $timeout(function() {
-             // update table params
-             params.total(data.total);
-             // set new data
-             $defer.resolve(data.result);
-             }, 500);
-             });
-             */
-        }
-    });
-
-}
-NGTableCtrl.$inject = ["$scope", "$filter", "ngTableParams", "$resource", "$timeout", "ngTableDataService"];
-
-// NOTE: We add the service definition here for quick reference
-App.service('ngTableDataService', function () {
-
-    var TableData = {
-        cache: null,
-        getData: function ($defer, params, api) {
-            // if no cache, request data and filter
-            if (!TableData.cache) {
-                if (api) {
-                    api.get(function (data) {
-                        TableData.cache = data;
-                        filterdata($defer, params);
-                    });
-                }
-            }
-            else {
-                filterdata($defer, params);
-            }
-
-            function filterdata($defer, params) {
-                var from = (params.page() - 1) * params.count();
-                var to = params.page() * params.count();
-                var filteredData = TableData.cache.result.slice(from, to);
-
-                params.total(TableData.cache.total);
-                $defer.resolve(filteredData);
-            }
-
-        }
-    };
-
-    return TableData;
-
-});
+//App.controller('NGTableCtrl', NGTableCtrl);
+//
+//function NGTableCtrl($scope, $filter, ngTableParams, $resource, $timeout, ngTableDataService) {
+//    'use strict';
+//    // required for inner references
+//    var vm = this;
+//
+//
+//    var data = [
+//        {name: "Moroni", age: 50, money: -10},
+//        {name: "Tiancum", age: 43, money: 120},
+//        {name: "Jacob", age: 27, money: 5.5},
+//        {name: "Nephi", age: 29, money: -54},
+//        {name: "Enos", age: 34, money: 110},
+//        {name: "Tiancum", age: 43, money: 1000},
+//        {name: "Jacob", age: 27, money: -201},
+//        {name: "Nephi", age: 29, money: 100},
+//        {name: "Enos", age: 34, money: -52.5},
+//        {name: "Tiancum", age: 43, money: 52.1},
+//        {name: "Jacob", age: 27, money: 110},
+//        {name: "Nephi", age: 29, money: -55},
+//        {name: "Enos", age: 34, money: 551},
+//        {name: "Tiancum", age: 43, money: -1410},
+//        {name: "Jacob", age: 27, money: 410},
+//        {name: "Nephi", age: 29, money: 100},
+//        {name: "Enos", age: 34, money: -100}
+//    ];
+//
+//    // SELECT ROWS
+//    // -----------------------------------
+//
+//    vm.data = data;
+//
+//    vm.tableParams3 = new ngTableParams({
+//        page: 1,            // show first page
+//        count: 10          // count per page
+//    }, {
+//        total: data.length, // length of data
+//        getData: function ($defer, params) {
+//            // use build-in angular filter
+//            var filteredData = params.filter() ?
+//                $filter('filter')(data, params.filter()) :
+//                data;
+//            var orderedData = params.sorting() ?
+//                $filter('orderBy')(filteredData, params.orderBy()) :
+//                data;
+//
+//            params.total(orderedData.length); // set total for recalc pagination
+//            $defer.resolve(orderedData.slice((params.page() - 1) * params.count(), params.page() * params.count()));
+//        }
+//    });
+//
+//    vm.changeSelection = function (user) {
+//        // console.info(user);
+//    };
+//
+//    // EXPORT CSV
+//    // -----------------------------------
+//
+//    var data4 = [{name: "Moroni", age: 50},
+//        {name: "Tiancum", age: 43},
+//        {name: "Jacob", age: 27},
+//        {name: "Nephi", age: 29},
+//        {name: "Enos", age: 34},
+//        {name: "Tiancum", age: 43},
+//        {name: "Jacob", age: 27},
+//        {name: "Nephi", age: 29},
+//        {name: "Enos", age: 34},
+//        {name: "Tiancum", age: 43},
+//        {name: "Jacob", age: 27},
+//        {name: "Nephi", age: 29},
+//        {name: "Enos", age: 34},
+//        {name: "Tiancum", age: 43},
+//        {name: "Jacob", age: 27},
+//        {name: "Nephi", age: 29},
+//        {name: "Enos", age: 34}];
+//
+//    vm.tableParams4 = new ngTableParams({
+//        page: 1,            // show first page
+//        count: 10           // count per page
+//    }, {
+//        total: data4.length, // length of data4
+//        getData: function ($defer, params) {
+//            $defer.resolve(data4.slice((params.page() - 1) * params.count(), params.page() * params.count()));
+//        }
+//    });
+//
+//
+//    // SORTING
+//    // -----------------------------------
+//
+//
+//    vm.tableParams = new ngTableParams({
+//        page: 1,            // show first page
+//        count: 10,          // count per page
+//        sorting: {
+//            name: 'asc'     // initial sorting
+//        }
+//    }, {
+//        total: data.length, // length of data
+//        getData: function ($defer, params) {
+//            // use build-in angular filter
+//            var orderedData = params.sorting() ?
+//                $filter('orderBy')(data, params.orderBy()) :
+//                data;
+//
+//            $defer.resolve(orderedData.slice((params.page() - 1) * params.count(), params.page() * params.count()));
+//        }
+//    });
+//
+//    // FILTERS
+//    // -----------------------------------
+//
+//    vm.tableParams2 = new ngTableParams({
+//        page: 1,            // show first page
+//        count: 10,          // count per page
+//        filter: {
+//            name: '',
+//            age: ''
+//            // name: 'M'       // initial filter
+//        }
+//    }, {
+//        total: data.length, // length of data
+//        getData: function ($defer, params) {
+//            // use build-in angular filter
+//            var orderedData = params.filter() ?
+//                $filter('filter')(data, params.filter()) :
+//                data;
+//
+//            vm.users = orderedData.slice((params.page() - 1) * params.count(), params.page() * params.count());
+//
+//            params.total(orderedData.length); // set total for recalc pagination
+//            $defer.resolve(vm.users);
+//        }
+//    });
+//
+//    // AJAX
+//
+//    var Api = $resource('server/table-data.json');
+//
+//    vm.tableParams5 = new ngTableParams({
+//        page: 1,            // show first page
+//        count: 10           // count per page
+//    }, {
+//        total: 0,           // length of data
+//        counts: [],         // hide page counts control
+//        getData: function ($defer, params) {
+//
+//            // Service using cache to avoid mutiple requests
+//            ngTableDataService.getData($defer, params, Api);
+//
+//            /* direct ajax request to api (perform result pagination on the server)
+//             Api.get(params.url(), function(data) {
+//             $timeout(function() {
+//             // update table params
+//             params.total(data.total);
+//             // set new data
+//             $defer.resolve(data.result);
+//             }, 500);
+//             });
+//             */
+//        }
+//    });
+//
+//}
+//NGTableCtrl.$inject = ["$scope", "$filter", "ngTableParams", "$resource", "$timeout", "ngTableDataService"];
+//
+//// NOTE: We add the service definition here for quick reference
+//App.service('ngTableDataService', function () {
+//
+//    var TableData = {
+//        cache: null,
+//        getData: function ($defer, params, api) {
+//            // if no cache, request data and filter
+//            if (!TableData.cache) {
+//                if (api) {
+//                    api.get(function (data) {
+//                        TableData.cache = data;
+//                        filterdata($defer, params);
+//                    });
+//                }
+//            }
+//            else {
+//                filterdata($defer, params);
+//            }
+//
+//            function filterdata($defer, params) {
+//                var from = (params.page() - 1) * params.count();
+//                var to = params.page() * params.count();
+//                var filteredData = TableData.cache.result.slice(from, to);
+//
+//                params.total(TableData.cache.total);
+//                $defer.resolve(filteredData);
+//            }
+//
+//        }
+//    };
+//
+//    return TableData;
+//
+//});
 
 /**=========================================================
  * Module: notifications.js
