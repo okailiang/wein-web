@@ -165,6 +165,12 @@ App.config(['$stateProvider', '$locationProvider', '$urlRouterProvider', 'RouteH
                 templateUrl: helper.basepath('sys-user.html'),
                 resolve: helper.resolveFor('toaster', 'ngDialog', 'loaders.css', 'spinkit')
             })
+            .state('app.listCitys', {
+                url: '/listCitys',
+                title: '城市管理',
+                templateUrl: helper.basepath('city.html'),
+                resolve: helper.resolveFor('treeitem', 'toaster', 'ngDialog', 'loaders.css', 'spinkit')
+            })
             .state('app.dashboard', {
                 url: '/dashboard',
                 title: 'Dashboard',
@@ -1002,7 +1008,7 @@ App.controller('LoginFormController', ['$rootScope', '$scope', '$http', '$state'
                 password: $scope.account.password,
                 kaptchaCode: $scope.account.kaptchaCode,
                 kaptchaFlag: 1,
-                type: 1
+                type: 2
             };
             var url = $rootScope.app.hostUrl + '/user/login';
             //将参数传递的方式改成form
@@ -2879,10 +2885,12 @@ App.controller('menuController', ['$scope', '$http', 'toaster', 'ngDialog', '$st
     $scope.listMenus = function () {
         $http.get('/menu/getAllMenu')
             .success(function (items) {
+                $scope.loadingIcon = '';
                 $scope.tree = items;
                 $scope.initMenuExpend($scope.tree);
             })
             .error(function (data, status, headers, config) {
+                $scope.loadingIcon = '';
                 alert('Failure loading menu');
             });
     };
@@ -2891,8 +2899,10 @@ App.controller('menuController', ['$scope', '$http', 'toaster', 'ngDialog', '$st
     /**
      * 刷新菜单
      */
+    $scope.loadingIcon = '';
     $scope.refreshMenus = function () {
         $scope.storeMenuExpend($scope.tree);
+        $scope.loadingIcon = 'loading-icon';
         $scope.listMenus();
     };
 
@@ -3127,6 +3137,7 @@ App.controller('RoleController', ['$scope', '$http', 'toaster', 'ngDialog', func
 
     $scope.setMenus = function (id) {
         $scope.roleId = id;
+        $scope.listMenus(id);
     };
 
     /**
@@ -3157,6 +3168,11 @@ App.controller('RoleController', ['$scope', '$http', 'toaster', 'ngDialog', func
             if ($scope.isExpendArr.includes(menuTree[i].id)) {
                 menuTree[i].$$isExpend = true;
             }
+            if (menuTree[i].status == 1) {
+                menuTree[i].$$isChecked = true;
+            } else {
+                menuTree[i].$$isChecked = false;
+            }
             $scope.initMenuExpend(menuTree[i].childMenu);
         }
     };
@@ -3164,37 +3180,40 @@ App.controller('RoleController', ['$scope', '$http', 'toaster', 'ngDialog', func
     /**
      * 加载菜单
      */
-    $scope.listMenus = function () {
-        $http.get('/menu/getAllMenu')
+    $scope.listMenus = function (id) {
+        $http.get('/role/listRoleMenusByRoleId?id=' + id)
             .success(function (items) {
+                $scope.loadingIcon = '';
                 $scope.tree = items;
                 $scope.initMenuExpend($scope.tree);
             })
             .error(function (data, status, headers, config) {
-                alert('Failure loading menu');
+                $scope.loadingIcon = '';
+                toaster.pop('error', null, data.message);
             });
     };
-    $scope.listMenus();
 
     /**
      * 刷新菜单
      */
+    $scope.loadingIcon = '';
     $scope.refreshMenus = function () {
+
         $scope.storeMenuExpend($scope.tree);
-        $scope.listMenus();
+        $scope.loadingIcon = 'loading-icon';
+        $scope.listMenus($scope.roleId);
+
     };
 
     /**
-     * 选中
+     * 选中和取消
      * @param item
      * @param checked
      */
     $scope.selectId = function (item, checked) {
         var index = $scope.menuIdArr.indexOf(item.id);
-        if (checked && index < 0) {
+        if (index < 0) {
             $scope.menuIdArr.push(item.id)
-        } else if (!checked && index > -1) {
-            $scope.menuIdArr.splice(index);
         }
         item.$$isChecked = checked;
 
@@ -3226,7 +3245,7 @@ App.controller('RoleController', ['$scope', '$http', 'toaster', 'ngDialog', func
             .post(url, data)
             .success(function (data, status, headers, config) {
                 toaster.pop('success', null, data.message);
-                $scope.listRoles();
+                //$scope.listRoles($scope.roleId);
             }).error(function (data, status, headers, config) {
                 toaster.pop('error', null, data.message);
             });
@@ -3390,6 +3409,67 @@ App.controller('SysUserController', ['$scope', '$http', 'toaster', 'ngDialog', f
             });
     };
 
+
+    /**
+     * 启用或禁用用户
+     */
+    $scope.enOrDisableUser = function (sysUser) {
+        if (sysUser.status == 0) {
+            $scope.deleteContent = "确认禁用该用户吗？";
+        } else {
+            $scope.deleteContent = "确认启用该用户吗？";
+        }
+
+        ngDialog.openConfirm({
+            template: 'deleteConfirmDialogId',
+            className: 'ngdialog-theme-default',//ngdialog-theme-plain ngdialog-theme-default
+            scope: $scope
+        }).then(function (value) {
+            var data = {
+                id: sysUser.id,
+                status: sysUser.status == 0 ? 1 : 0
+            };
+
+            var url = sysUser.status == 0 ? '/sysUser/disableUser' : '/sysUser/enableUser';
+            $http
+                .post(url, data)
+                .success(function (data, status, headers, config) {
+                    toaster.pop('success', null, data.message);
+                    $scope.listSysUsers();
+                }).error(function (data, status, headers, config) {
+                    toaster.pop('error', null, data.message);
+                });
+        });
+    };
+
+    /**
+     * 重置密码
+     */
+    $scope.resetPassword = function (id) {
+
+        $scope.deleteContent = "确认重置密码吗？";
+
+        ngDialog.openConfirm({
+            template: 'deleteConfirmDialogId',
+            className: 'ngdialog-theme-default',//ngdialog-theme-plain ngdialog-theme-default
+            scope: $scope
+        }).then(function (value) {
+            var data = {
+                id: id
+            };
+
+            var url = '/sysUser/resetPassword';
+            $http
+                .post(url, data)
+                .success(function (data, status, headers, config) {
+                    toaster.pop('success', null, data.message);
+                    $scope.listSysUsers();
+                }).error(function (data, status, headers, config) {
+                    toaster.pop('error', null, data.message);
+                });
+        });
+    };
+
 }]);
 
 
@@ -3520,6 +3600,185 @@ App.controller('UserController', ['$scope', '$http', 'toaster', 'ngDialog', func
     };
 
 }]);
+
+/**=========================================================
+ * Module: 注册城市管理
+ * Provides 城市查询、详情
+ =========================================================*/
+
+App.controller('CityController', ['$scope', '$http', 'toaster', 'ngDialog', function ($scope, $http, toaster, ngDialog) {
+    $scope.pageSize = 20;//列表分页每页数
+    $scope.currentPage = 1;
+    $scope.city = {};
+    $scope.provinces = [];
+    $scope.searchCitys = [];
+    $scope.searchAreas = [];
+    $scope.province ={};
+    $scope.searchCity = {};
+    $scope.searchArea = {};
+
+    $scope.handleParam = function (value) {
+        if (value == undefined || value == null) {
+            return '';
+        }
+        return value;
+    };
+
+    $scope.getCityByParent = function (id, type) {
+        if(id == 0){
+            return;
+        }
+        var url = '/common/city/listCitysByParentId?parentId=' + id;
+        $http.get(url).success(function (data) {
+            if(type == 1){
+                $scope.searchCitys = data;
+            }
+            if(type == 2){
+                $scope.searchAreas = data;
+            }
+        }).error(function (data, status, headers, config) {
+            toaster.pop('error', null, data.message);
+        });
+    };
+
+    $scope.changeProvince = function (province) {
+        $scope.searchCitys = [];
+        $scope.searchAreas = [];
+        $scope.searchCity = {};
+        $scope.searchArea = {};
+        $scope.getCityByParent(province.id, 1);
+    };
+
+    $scope.changeCity = function (city) {
+        $scope.searchAreas = [];
+        $scope.searchArea = {};
+        $scope.getCityByParent(city.id, 2);
+    };
+
+    $scope.handleCityId = function(){
+        var cityId = "";
+        if($scope.province.id != undefined){
+            cityId = $scope.province.id;
+        }
+        if(!!$scope.searchCity.id){
+            cityId = $scope.searchCity.id;
+        }
+        if(!!$scope.searchArea.id){
+            cityId = $scope.searchArea.id;
+        }
+        return cityId;
+    };
+
+    $scope.initProvince = function () {
+        $http.get('/common/city/listProvince').success(function (data) {
+            var defaultProvince =  {};
+            defaultProvince.id = 0;
+            defaultProvince.name = '省';
+            $scope.provinces.push(defaultProvince);
+            $scope.provinces = $scope.provinces.concat(data);
+        }).error(function (data, status, headers, config) {
+            toaster.pop('error', null, data.message);
+        });
+    };
+    $scope.initProvince();
+
+    $scope.initCity = function () {
+        $scope.city = {};
+    };
+
+    /**
+     * 查询角色列表
+     */
+    $scope.listCitys = function () {
+        $scope.loading = true;
+        $scope.citys = [];
+        var listUrl = '/common/city/listCitysWithPage';
+        var pageParam = '&pageSize=' + $scope.pageSize + '&curPage=' + $scope.currentPage
+        var listParam = '?time=' + (new Date().getTime())
+            + "&id=" + $scope.handleParam($scope.searchCityId)
+            + "&parentId=" + (!!$scope.searchParentId ? $scope.handleParam($scope.searchParentId) : $scope.handleCityId())
+            + "&level=" + $scope.handleParam($scope.searchLevel)
+            + "&type=" + $scope.handleParam($scope.searchType)
+            + "&name=" + $scope.handleParam($scope.searchCityName);
+        $http.get(listUrl + listParam + pageParam).success(function (data) {
+            $scope.loading = false;
+            $scope.totalItems = data.totalCount;
+            $scope.citys = data.resultList;
+        }).error(function (data, status, headers, config) {
+            toaster.pop('error', null, data.message);
+        });
+    };
+
+    //查询
+    $scope.listCitys();
+    $scope.pageChanged = function () {
+        $scope.listCitys();
+    };
+
+    /**
+     * 确认弹出框
+     */
+    $scope.openConfirm = function (id) {
+        $scope.deleteContent = "确认删除吗";
+        ngDialog.openConfirm({
+            template: 'deleteConfirmDialogId',
+            className: 'ngdialog-theme-default',//ngdialog-theme-plain ngdialog-theme-default
+            scope: $scope
+        }).then(function (value) {
+            //删除
+            $scope.removeCity(id);
+        });
+    };
+
+
+    /**
+     * 启用或禁用城市
+     */
+    $scope.enOrDisableCity = function (city) {
+        if (city.status == 0) {
+            $scope.deleteContent = "确认禁用该城市吗？";
+        } else {
+            $scope.deleteContent = "确认启用该城市吗？";
+        }
+
+        ngDialog.openConfirm({
+            template: 'deleteConfirmDialogId',
+            className: 'ngdialog-theme-default',//ngdialog-theme-plain ngdialog-theme-default
+            scope: $scope
+        }).then(function (value) {
+            var data = {
+                id: city.id,
+                status: city.status == 0 ? 1 : 0
+            };
+
+            var url = city.status == 0 ? '/common/city/disableCity' : '/common/city/enableCity';
+            $http
+                .post(url, data)
+                .success(function (data, status, headers, config) {
+                    toaster.pop('success', null, data.message);
+                    $scope.listCitys();
+                }).error(function (data, status, headers, config) {
+                    toaster.pop('error', null, data.message);
+                });
+        });
+    };
+
+    /**
+     * 详情
+     */
+    $scope.detail = function (id) {
+
+        var url = '/common/city/getCityById?cityId=' + id;
+        $http.get(url).success(function (data) {
+            debugger
+        }).error(function (data, status, headers, config) {
+            toaster.pop('error', null, data.message);
+        });
+    }
+
+}]);
+
+
 /**=========================================================
  * Module: demo-panels.js
  * Provides a simple demo for panel actions
@@ -4768,8 +5027,8 @@ App.controller('AppController',
                 listIsOpen: false,
                 // list of available languages
                 available: {
-                    'en': 'English',
-                    'es_AR': 'Español',
+                    //'en': 'English',
+                    //'es_AR': 'Español',
                     'zh': 'Chinese'
                 },
                 // display always the current ui language
