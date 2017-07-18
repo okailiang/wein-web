@@ -1,0 +1,162 @@
+<h3>城市管理
+    <small>城市管理</small>
+</h3>
+<div ng-controller="CityController">
+
+    <!-- START panel-->
+    <div class="panel panel-default">
+        <toaster-container
+                toaster-options="{'position-class': 'toast-center', 'close-button':true}"></toaster-container>
+        <div class="text-center panel-heading line">
+
+            <form city="form" name="searchForm" ng-submit="listCitys()" class="form-inline ng-pristine ng-valid">
+                <div class="row">
+                    <div class="col-lg-3 col-md-3 col-xs-5">
+                        <div class="form-group">
+                            <label for="city-id" class="control-label">id：</label>
+                            <input id="city-id" type="number" name="cityId" ng-model="searchCityId"
+                                   min="1" placeholder="输入id"
+                                   class="input-sm form-control">
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-md-4 col-xs-5">
+                        <div class="form-group">
+                            <label for="parent-id" class="control-label">父id：</label>
+                            <input id="parent-id" type="number" name="parentId"
+                                   ng-model="searchParentId"
+                                   min="1"
+                                   placeholder="上级城市id"
+                                   class="input-sm form-control">
+                        </div>
+                    </div>
+
+                    <div class="col-lg-3 col-md-4 col-xs-5">
+                        <div class="form-group">
+                            <label for="city-level" class="control-label">级别：</label>
+                            <input id="city-level" name="level" ng-model="searchLevel" type="number" min="0"
+                                   placeholder="输入城市级别"
+                                   class="input-sm form-control">
+                        </div>
+                    </div>
+
+                    <div class="col-lg-3 col-md-4 col-xs-5">
+                        <div class="form-group">
+                            <label for="city-type" class="control-label">类型：</label>
+                            <input id="city-type" name="type" ng-model="searchType" type="number" min="0"
+                                   placeholder="输入城市类型"
+                                   class="input-sm form-control">
+                        </div>
+                    </div>
+
+                </div>
+                <div class="row mt-lg">
+                    <div class="col-lg-3 col-md-4 col-xs-5">
+                        <div class="form-group">
+                            <label for="city-name" class="control-label">城市：</label>
+                            <input id="city-name" name="cityName" ng-model="searchCityName" type="text"
+                                   placeholder="输入城市名或拼音"
+                                   class="input-sm form-control">
+                        </div>
+                    </div>
+
+                    <div class="col-lg-6 col-md-6 col-xs-6">
+                        <div class="form-group">
+                            <label  class="control-label">省： </label>
+                            <select class="input-sm form-control search-city-w" ng-change="changeProvince(province)" ng-model="province" ng-options="x.name for x in provinces">
+                            </select>
+                        </div>
+                        <div class="form-group" >
+                            <label  class="control-label">市： </label>
+                            <select class="input-sm form-control search-city-w" ng-change="changeCity(searchCity)" ng-model="searchCity" ng-options="x.name for x in searchCitys">
+                            </select>
+                        </div>
+                        <div class="form-group" >
+                            <label  class="control-label">县（区）： </label>
+                            <select class="input-sm form-control search-city-w" ng-model="searchArea" ng-options="x.name for x in searchAreas">
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-1 col-md-1 col-xs-3">
+                        <div class="form-group">
+                            <button type="submit" class="btn btn-sm btn-info" data-loading-text="查询中">查询</button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+
+        </div>
+
+        <div class="panel-body table-padding">
+            <!-- START table-responsive-->
+            <div class="table-responsive">
+                <table class="table table-striped table-hover table-bordered thead-color">
+                    <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>城市名</th>
+                        <th>拼音</th>
+                        <th>级别</th>
+                        <th>类型</th>
+                        <th>经度</th>
+                        <th>纬度</th>
+                        <th>全名</th>
+                        <th>上级城市Id</th>
+                        <th>修改人</th>
+                        <th>修改时间</th>
+                        <th>操作</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr ng-repeat="city in citys">
+                        <td>{{ city.id }}</td>
+                        <td>{{ city.name}}</td>
+                        <td>{{ city.pinyin}}</td>
+                        <td>{{ city.level}}</td>
+                        <td>{{ city.type}}</td>
+                        <td>{{ city.longitude}}</td>
+                        <td>{{ city.latitude}}</td>
+                        <td>{{ city.fullName}}</td>
+                        <td>{{ city.parentId}}</td>
+                        <td>{{ city.modifier}}</td>
+                        <td>{{ city.modifyTime | date:'yyyy-MM-dd hh:mm:ss'}}</td>
+                        <td>
+                            <button type="button" ng-click="enOrDisableCity(city)"
+                                    class="btn btn-sm bg-inherit no-border">
+                                <em class="fa fa-lock font-s-16" ng-show="{{city.status==0}}" title="禁用"></em>
+                                <em class="fa fa-unlock font-s-16" ng-show="{{city.status==1}}" title="启用"></em>
+                            </button>
+                            <button type="button" title="重置密码"
+                                    ng-click="detail(city.id)" class="btn btn-link btn-sm no-border">
+                                <span class="text-info">详情</span>
+                            </button>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+            <!-- END table-responsive-->
+            <!--</div>-->
+            <!--<div class="panel-footer">-->
+            <div class="text-center table-pagination" ng-show="totalItems > 0">
+                <div class="pagination-total-page">共{{totalItems}}条 / {{numPages}}页</div>
+                <pagination class="pagination-tab pagination-sm" total-items="totalItems" ng-change="pageChanged()"
+                            ng-model="currentPage"
+                            max-size="4" previous-text="上页" next-text="下页" first-text="首页" last-text="尾页"
+                            boundary-links="true" direction-links="false" rotate="false" items-per-page="pageSize"
+                            num-pages="numPages"></pagination>
+            </div>
+            <div class="ball-pulse text-center no-data" ng-show="loading">
+                <div></div>
+                <div></div>
+                <div></div>
+            </div>
+            <div class="text-center text-danger no-data" ng-show="totalItems == 0">暂无数据</div>
+        </div>
+    </div>
+    <!-- END panel-->
+
+    <!--START ngdialog delete-confirm-->
+    <div ng-include="'app/views/common/confirm-delete.html'"></div>
+    <!--END ngdialog-->
+</div>
