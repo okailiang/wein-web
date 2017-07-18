@@ -1,0 +1,120 @@
+<h3>用户管理
+    <small>用户管理</small>
+</h3>
+<div ng-controller="UserController">
+
+    <!-- START panel-->
+    <div class="panel panel-default">
+        <toaster-container
+                toaster-options="{'position-class': 'toast-center', 'close-button':true}"></toaster-container>
+        <div class="text-center panel-heading line">
+            <div class="row">
+                <form user="form" name="searchForm" ng-submit="listUsers()" class="form-inline ng-pristine ng-valid">
+                    <div class="col-lg-2 col-md-3 col-xs-5">
+                        <div class="form-group">
+                            <label for="user-id" class="control-label">id：</label>
+                            <input id="user-id" style="width: 65%;" type="number" name="userId" ng-model="searchUserId" min="1"
+                                   placeholder="输入id"
+                                   class="input-sm form-control">
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-md-4 col-xs-5">
+                        <div class="form-group">
+                            <label for="user-name" class="control-label">用户名：</label>
+                            <input id="user-name" name="userName" ng-model="searchUserName" type="text"
+                                   placeholder="输入用户名"
+                                   class="input-sm form-control">
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-md-4 col-xs-5">
+                        <div class="form-group">
+                            <label for="user-email" class="control-label">邮箱：</label>
+                            <input id="user-email" name="email" ng-model="searchEmail" type="text"
+                                   placeholder="输入用户邮箱"
+                                   class="input-sm form-control">
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-md-4 col-xs-5">
+                        <div class="form-group">
+                            <label for="user-phoneNo" class="control-label">手机号：</label>
+                            <input id="user-phoneNo" name="phoneNo" ng-model="searchPhoneNo" type="text"
+                                   placeholder="输入用户手机号"
+                                   class="input-sm form-control">
+                        </div>
+                    </div>
+
+                    <div class="col-lg-1 col-md-1 col-xs-3">
+                        <div class="form-group">
+                            <button type="submit" class="btn btn-sm btn-info" data-loading-text="查询中">查询</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="panel-body table-padding">
+            <!-- START table-responsive-->
+            <div class="table-responsive">
+                <table class="table table-striped table-hover table-bordered thead-color">
+                    <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>用户名</th>
+                        <th>邮箱</th>
+                        <th>手机号</th>
+                        <th>状态</th>
+                        <th>创建时间</th>
+                        <th>修改人</th>
+                        <th>修改时间</th>
+                        <th>操作</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr ng-repeat="user in users">
+                        <td>{{ user.id }}</td>
+                        <td>{{ user.userName}}</td>
+                        <td>{{ user.email}}</td>
+                        <td>{{ user.phoneNo}}</td>
+                        <td>{{ user.status==0?"启用":"禁用"}}</td>
+                        <td>{{ user.createTime | date:'yyyy-MM-dd hh:mm:ss'}}</td>
+                        <td>{{ user.modifier}}</td>
+                        <td>{{ user.modifyTime | date:'yyyy-MM-dd hh:mm:ss'}}</td>
+                        <td>
+                            <button type="button" ng-click="enOrDisableUser(user)" class="btn btn-sm bg-inherit no-border">
+                                <em class="fa fa-lock font-s-16" ng-show="{{user.status==0}}" title="禁用"></em>
+                                <em class="fa fa-unlock font-s-16" ng-show="{{user.status==1}}" title="启用"></em>
+                            </button>
+                            <button type="button" title="重置密码"
+                                    ng-click="resetPassword(user.id)" class="btn btn-link btn-sm no-border">
+                                <span class="text-info">重置密码</span>
+                            </button>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+            <!-- END table-responsive-->
+            <!--</div>-->
+            <!--<div class="panel-footer">-->
+            <div class="text-center table-pagination" ng-show="totalItems > 0">
+                <div class="pagination-total-page">共{{totalItems}}条 / {{numPages}}页</div>
+                <pagination class="pagination-tab pagination-sm" total-items="totalItems" ng-change="pageChanged()"
+                            ng-model="currentPage"
+                            max-size="4" previous-text="上页" next-text="下页" first-text="首页" last-text="尾页"
+                            boundary-links="true" direction-links="false" rotate="false" items-per-page="pageSize"
+                            num-pages="numPages"></pagination>
+            </div>
+            <div class="ball-pulse text-center no-data" ng-show="loading">
+                <div></div>
+                <div></div>
+                <div></div>
+            </div>
+            <div class="text-center text-danger no-data" ng-show="totalItems == 0">暂无数据</div>
+        </div>
+    </div>
+    <!-- END panel-->
+
+    <!--START ngdialog delete-confirm-->
+    <div ng-include="'app/views/common/confirm-delete.html'"></div>
+    <!--END ngdialog-->
+</div>

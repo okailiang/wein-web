@@ -1,0 +1,145 @@
+<h3>菜单管理
+    <small>菜单管理</small>
+</h3>
+<div ng-controller="menuController">
+    <!-- START panel-->
+    <div class="panel panel-default">
+        <toaster-container
+                toaster-options="{'position-class': 'toast-center', 'close-button':true}"></toaster-container>
+        <div class="menu-onelevel"><strong>一级菜单</strong>
+            <em class="fa fa-plus-circle text-info" ng-click="addMenu()" title="添加主一级菜单" data-toggle="modal" data-target="#saveOrUpdateDialog"></em>
+            <em class="fa fa-refresh text-info {{loadingIcon}}" ng-click="refreshMenus()" title="重新加载菜单"></em>
+        </div>
+        <!--  构建菜单树-->
+        <div class="menu-main">
+            <tree-view tree-data="tree" text-field="menuName" value-field='id' item-clicked="itemClicked($item)"
+                       item-checked-changed="itemCheckedChanged($item)" can-checked="false"
+                       edit-menu="editMenu($item)" add-menu="addMenu($item)"
+                       remove-menu="removeMenu($item)"></tree-view>
+
+        </div>
+    </div>
+    <!-- END panel-->
+
+    <!-- 模态框（Modal）添加、编辑 -->
+    <div class="modal fade" id="saveOrUpdateDialog" data-backdrop="static" data-keyboard="false" aria-hidden="true"
+         tabindex="-1" menu="dialog">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header modal-padding">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true" ng-click="initMenu()">
+                        &times;
+                    </button>
+                    <h4 class="modal-title" ng-show="menu.id == undefined">
+                        新增
+                    </h4>
+                    <h4 class="modal-title" ng-show="menu.id != undefined">
+                        编辑
+                    </h4>
+                </div>
+                <div class="modal-body">
+                    <form name="menuForm" ng-submit="saveMenu()" novalidate=""
+                          class="form-horizontal form-validate ng-pristine ng-valid">
+
+                        <div class="form-group">
+                            <label class="control-label col-lg-3 col-md-3 col-sm-3">父菜单名
+                                <span class="text-danger">*</span>
+                            </label>
+
+                            <div class="col-lg-8 col-md-8 col-sm-8">
+                                <input type="text" name="parentId" hidden>
+                                <input type="text" name="menuName" ng-model="menu.parentMenuName"
+                                       placeholder="请填写字母、数字或汉字，2-10字符" class="form-control" maxlength="10"
+                                       ng-pattern="/^[a-zA-Z0-9\u4e00-\u9fa5]{2,10}$/" disabled required>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="control-label col-lg-3 col-md-3 col-sm-3">菜单名称
+                                <span class="text-danger">*</span>
+                            </label>
+
+                            <div class="col-lg-8 col-md-8 col-sm-8">
+                                <input type="text" name="menuName" ng-model="menu.menuName"
+                                       placeholder="请填写字母、数字或汉字，2-10字符" class="form-control" maxlength="10"
+                                       ng-pattern="/^[a-zA-Z0-9\u4e00-\u9fa5]{2,10}$/" required>
+                            </div>
+                        </div>
+
+                        <div class="form-group has-feedback">
+                            <label class="control-label col-lg-3 col-md-3 col-sm-3 col-xs-4">菜单图标
+                                <span>&nbsp;&nbsp;</span>
+                            </label>
+
+                            <div class="col-lg-8 col-md-8 col-sm-8 col-xs-11">
+                                <input type="text" name="icon" ng-model="menu.icon"
+                                       placeholder="请点击填写右边的图标文案" class="form-control" maxlength="50"
+                                       ng-pattern="/^[a-zA-Z0-9/_\\ -]{0,50}$/">
+                                <span class="{{menu.icon}} form-control-feedback text-muted"></span>
+                            </div>
+                            <a href="app/views/icons.html" class="btn btn-link menu-icons-list" target="_blank">图标</a>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="control-label col-lg-3 col-md-3 col-sm-3">菜单链接
+                                <span class="text-danger">*</span>
+                            </label>
+
+                            <div class="col-lg-8 col-md-8 col-sm-8">
+                                <input type="text" name="url" ng-model="menu.url"
+                                       placeholder="请填写字母、数字，2-50字符" class="form-control" maxlength="50"
+                                       ng-pattern="/^[\w/._=?-\\#\\+&]{2,50}$/" required>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="control-label col-lg-3 col-md-3 col-sm-3">菜单级别
+                                <span class="text-danger">*</span>
+                            </label>
+
+                            <div class="col-lg-8 col-md-8 col-sm-8">
+                                <input type="text" name="level" ng-model="menu.level" placeholder="级别，不大于100正整数"
+                                       ui-validate="'$value &gt;= 0'&amp;&amp;'$value &lt;= 100'" class="form-control"
+                                       disabled required>
+                                <span ng-show="menuForm.level.$dirty &amp;&amp; menuForm.level.$error.required"></span>
+                            </div>
+                        </div>
+
+
+                        <div class="form-group">
+                            <label class="control-label col-lg-3 col-md-3 col-sm-3">排序
+                                <span class="text-danger">*</span>
+                            </label>
+
+                            <div class="col-lg-8 col-md-8 col-sm-8">
+                                <input type="text" name="sorting" ng-model="menu.sorting" placeholder="级别，不大于100正整数"
+                                       ui-validate="'$value &gt;= 0'&amp;&amp;'$value &lt;= 100'" class="form-control"
+                                       required>
+                                <span ng-show="menuForm.sorting.$dirty &amp;&amp; menuForm.sorting.$error.required"></span>
+                            </div>
+                        </div>
+
+                    </form>
+                </div>
+                <div class="modal-footer modal-padding">
+                    <div class="text-center">
+                        <button type="submit" class="btn btn-primary"
+                                ng-click="saveOrUpdateMenu()" ng-disabled="menuForm.$invalid">提交
+                        </button>
+                        &nbsp;&nbsp;&nbsp;&nbsp;
+                        <button type="button" class="btn btn-default" data-dismiss="modal" ng-click="initMenu()">取消
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <!-- /.modal-content -->
+        </div>
+        <!-- /.modal -->
+    </div>
+    <!--END 模态框（Modal） -->
+
+    <!--START ngdialog delete-confirm-->
+    <div  ng-include="'app/views/common/confirm-delete.html'"></div>
+    <!--END ngdialog-->
+
+</div>
