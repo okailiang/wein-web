@@ -15,7 +15,7 @@
                         <div class="form-group">
                             <label for="city-id" class="control-label">id：</label>
                             <input id="city-id" type="number" name="cityId" ng-model="searchCityId"
-                                   min="1" placeholder="输入id"
+                                   min="1" max="1000000" placeholder="输入id"
                                    class="input-sm form-control">
                         </div>
                     </div>
@@ -24,7 +24,7 @@
                             <label for="parent-id" class="control-label">父id：</label>
                             <input id="parent-id" type="number" name="parentId"
                                    ng-model="searchParentId"
-                                   min="1"
+                                   min="1" max="1000000"
                                    placeholder="上级城市id"
                                    class="input-sm form-control">
                         </div>
@@ -33,7 +33,7 @@
                     <div class="col-lg-3 col-md-4 col-xs-5">
                         <div class="form-group">
                             <label for="city-level" class="control-label">级别：</label>
-                            <input id="city-level" name="level" ng-model="searchLevel" type="number" min="0"
+                            <input id="city-level" name="level" ng-model="searchLevel" type="number" min="0" max="5"
                                    placeholder="输入城市级别"
                                    class="input-sm form-control">
                         </div>
@@ -42,7 +42,7 @@
                     <div class="col-lg-3 col-md-4 col-xs-5">
                         <div class="form-group">
                             <label for="city-type" class="control-label">类型：</label>
-                            <input id="city-type" name="type" ng-model="searchType" type="number" min="0"
+                            <input id="city-type" name="type" ng-model="searchType" type="number" min="0" max="5"
                                    placeholder="输入城市类型"
                                    class="input-sm form-control">
                         </div>
@@ -59,22 +59,19 @@
                         </div>
                     </div>
 
-                    <div class="col-lg-6 col-md-6 col-xs-6">
+                    <div class="col-lg-4 col-md-5 col-xs-6">
                         <div class="form-group">
-                            <label  class="control-label">省： </label>
-                            <select class="input-sm form-control search-city-w" ng-change="changeProvince(province)" ng-model="province" ng-options="x.name for x in provinces">
+                            <label class="control-label">省： </label>
+                            <select class="input-sm form-control search-city-w" ng-change="changeProvince(province)"
+                                    ng-model="province" ng-options="x.name for x in provinces">
                             </select>
                         </div>
-                        <div class="form-group" >
-                            <label  class="control-label">市： </label>
-                            <select class="input-sm form-control search-city-w" ng-change="changeCity(searchCity)" ng-model="searchCity" ng-options="x.name for x in searchCitys">
+                        <div class="form-group">
+                            <label class="control-label">市： </label>
+                            <select class="input-sm form-control search-city-w" ng-model="searchCity"
+                                    ng-options="x.name for x in searchCitys">
                             </select>
                         </div>
-                        <!--<div class="form-group" >-->
-                            <!--<label  class="control-label">县（区）： </label>-->
-                            <!--<select class="input-sm form-control search-city-w" ng-model="searchArea" ng-options="x.name for x in searchAreas">-->
-                            <!--</select>-->
-                        <!--</div>-->
                     </div>
 
                     <div class="col-lg-1 col-md-1 col-xs-3">
@@ -121,14 +118,16 @@
                         <td>{{ city.modifier}}</td>
                         <td>{{ city.modifyTime | date:'yyyy-MM-dd hh:mm:ss'}}</td>
                         <td>
-                            <button type="button" ng-click="enOrDisableCity(city)"
-                                    class="btn btn-sm bg-inherit no-border">
-                                <em class="fa fa-lock font-s-16" ng-show="{{city.status==0}}" title="禁用"></em>
-                                <em class="fa fa-unlock font-s-16" ng-show="{{city.status==1}}" title="启用"></em>
+                            <button type="button" title="编辑" data-toggle="modal" data-target="#saveOrUpdateCityDialog"
+                                    ng-click="getCity(city.id)" class="btn btn-sm bg-inherit no-border">
+                                <em class="fa fa-pencil font-s-16"></em>
                             </button>
-                            <button type="button" title="重置密码"
-                                    ng-click="detail(city.id)" class="btn btn-link btn-sm no-border">
-                                <span class="text-info">详情</span>
+                            <button type="button" title="详情" data-toggle="modal" data-target="#saveOrUpdateCityDialog"
+                                    ng-click="getCity(city.id, 1)" class="btn btn-link btn-sm no-border">
+                                <!--<span class="text-info">详情</span>  fa-comment-o-->
+                                <!--<a class="no-decoration text-info" ui-sref="app.city-detail({id:city.id})">-->
+                                <em class="fa fa-comment-o font-s-16"></em>
+                                <!--</a>-->
                             </button>
                         </td>
                     </tr>
@@ -136,25 +135,178 @@
                 </table>
             </div>
             <!-- END table-responsive-->
-            <!--</div>-->
-            <!--<div class="panel-footer">-->
-            <div class="text-center table-pagination" ng-show="totalItems > 0">
-                <div class="pagination-total-page">共{{totalItems}}条 / {{numPages}}页</div>
-                <pagination class="pagination-tab pagination-sm" total-items="totalItems" ng-change="pageChanged()"
-                            ng-model="currentPage"
-                            max-size="4" previous-text="上页" next-text="下页" first-text="首页" last-text="尾页"
-                            boundary-links="true" direction-links="false" rotate="false" items-per-page="pageSize"
-                            num-pages="numPages"></pagination>
-            </div>
-            <div class="ball-pulse text-center no-data" ng-show="loading">
-                <div></div>
-                <div></div>
-                <div></div>
-            </div>
-            <div class="text-center text-danger no-data" ng-show="totalItems == 0">暂无数据</div>
+            <!-- pagination-tab -->
+            <div ng-include="'app/views/common/pagination-tab.html'"></div>
         </div>
     </div>
     <!-- END panel-->
+
+    <!-- START 增加修改城市信息表单模态框-->
+    <div class="modal fade" id="saveOrUpdateCityDialog" data-backdrop="static" data-keyboard="false" aria-hidden="true"
+         tabindex="-1" role="dialog">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header modal-padding">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true" ng-click="initCity()">
+                        &times;
+                    </button>
+                    <h4 class="modal-title" ng-show="city.id == undefined">
+                        新增
+                    </h4>
+                    <h4 class="modal-title" ng-show="!!city.id &amp;&amp; !detailFlag">
+                        编辑
+                    </h4>
+                    <h4 class="modal-title" ng-show="detailFlag">
+                        详情
+                    </h4>
+                </div>
+                <div class="modal-body">
+                    <form name="cityForm" ng-submit="saveCity()" novalidate=""
+                          class="form-horizontal form-validate ng-pristine ng-valid">
+
+                        <input type="hidden" name="parentId" ng-model="city.parentId">
+                        <input type="hidden" name="id" ng-model="city.id">
+                        <div class="form-group" ng-show="detailFlag">
+                            <label class="control-label col-lg-3 col-md-3 col-sm-3">
+                                城市关系<span class="text-danger">*</span>
+                            </label>
+
+                            <div class="col-lg-8 col-md-8 col-sm-8">
+                                <input type="text" name="provinceCityArea" ng-model="city.provinceCityArea"
+                                       class="form-control" ng-disabled="detailFlag">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="control-label col-lg-3 col-md-3 col-sm-3">
+                                区域编号<span class="text-danger">*</span>
+                            </label>
+
+                            <div class="col-lg-8 col-md-8 col-sm-8">
+                                <input type="text" name="districtCode" ng-model="city.districtCode" placeholder="请填写正整数"
+                                       ui-validate="'$value &gt;= 0'" class="form-control" ng-disabled="detailFlag"
+                                       required>
+                                <span ng-show="cityForm.districtCode.$dirty &amp;&amp; cityForm.districtCode.$error.required"></span>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="control-label col-lg-3 col-md-3 col-sm-3">城市名称
+                                <span class="text-danger">*</span>
+                            </label>
+
+                            <div class="col-lg-8 col-md-8 col-sm-8">
+                                <input type="text" name="name" ng-model="city.name"
+                                       placeholder="请填写汉字，2-20字符" class="form-control" maxlength="20"
+                                       ng-pattern="/^[\u4e00-\u9fa5]{2,20}$/" ng-disabled="detailFlag" required>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="control-label col-lg-3 col-md-3 col-sm-3">城市全名
+                                <span class="text-danger">*</span>
+                            </label>
+
+                            <div class="col-lg-8 col-md-8 col-sm-8">
+                                <input type="text" name="fullName" ng-model="city.fullName"
+                                       placeholder="请填写汉字，2-20字符" class="form-control" maxlength="20"
+                                       ng-pattern="/^[\u4e00-\u9fa5]{2,20}$/" ng-disabled="detailFlag" required>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="control-label col-lg-3 col-md-3 col-sm-3">城市拼音
+                                <span class="text-danger">*</span>
+                            </label>
+
+                            <div class="col-lg-8 col-md-8 col-sm-8">
+                                <input type="text" name="pinyin" ng-model="city.pinyin"
+                                       placeholder="请填写小写字母，2-50字符" class="form-control" maxlength="50"
+                                       ng-pattern="/^[a-z]{2,50}$/" ng-disabled="detailFlag" required>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="control-label col-lg-3 col-md-3 col-sm-3">城市首字母
+                                <span class="text-danger">*</span>
+                            </label>
+
+                            <div class="col-lg-8 col-md-8 col-sm-8">
+                                <input type="text" name="abbr" ng-model="city.abbr"
+                                       placeholder="请填写大写字母，2-20字符" class="form-control" maxlength="20"
+                                       ng-pattern="/^[A-Z]{2,20}$/" ng-disabled="detailFlag" required>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="control-label col-lg-3 col-md-3 col-sm-3">
+                                城市级别<span class="text-danger">*</span>
+                            </label>
+
+                            <div class="col-lg-8 col-md-8 col-sm-8">
+                                <input type="text" name="level" ng-model="city.level" placeholder="请填写0-5整数"
+                                       ui-validate="'$value &gt;= 0'&amp;&amp;'$value &lt;= 5'" class="form-control"
+                                       ng-disabled="detailFlag" required>
+                                <span ng-show="cityForm.level.$dirty &amp;&amp; cityForm.level.$error.required"></span>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="control-label col-lg-3 col-md-3 col-sm-3">
+                                城市类型<span class="text-danger">*</span>
+                            </label>
+
+                            <div class="col-lg-8 col-md-8 col-sm-8">
+                                <input type="text" name="type" ng-model="city.type" placeholder="请填写0-5整数"
+                                       ui-validate="'$value &gt;= 0'&amp;&amp;'$value &lt;= 5'" class="form-control"
+                                       ng-disabled="detailFlag" required>
+                                <span ng-show="cityForm.type.$dirty &amp;&amp; cityForm.type.$error.required"></span>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="control-label col-lg-3 col-md-3 col-sm-3">
+                                城市经度<span class="text-danger">*</span>
+                            </label>
+
+                            <div class="col-lg-8 col-md-8 col-sm-8">
+                                <input type="text" name="longitude" ng-model="city.longitude" placeholder="请输入不大于180的小数"
+                                       ng-pattern="/^[0-9]{1,3}([.]{1}[0-9]{1,7})?$/" maxlength="11"
+                                       class="form-control"
+                                       ng-disabled="detailFlag" required>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="control-label col-lg-3 col-md-3 col-sm-3">
+                                城市纬度<span class="text-danger">*</span>
+                            </label>
+
+                            <div class="col-lg-8 col-md-8 col-sm-8">
+                                <input type="text" name="latitude" ng-model="city.latitude" placeholder="请输入不大于90的小数"
+                                       ng-pattern="/^[0-9]{1,2}([.]{1}[0-9]{1,7})?$/" maxlength="10"
+                                       class="form-control"
+                                       ng-disabled="detailFlag" required>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer modal-padding">
+                    <div class="text-center">
+                        <button type="submit" class="btn btn-primary" ng-show="!detailFlag"
+                                ng-click="saveCity()" ng-disabled="cityForm.$invalid">提交
+                        </button>
+                        &nbsp;&nbsp;&nbsp;&nbsp;
+                        <button type="button" class="btn btn-default" data-dismiss="modal" ng-click="initCity()">取消
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <!-- /.modal-content -->
+        </div>
+        <!-- /.modal -->
+    </div>
+    <!-- END 增加修改城市信息表单模态框-->
 
     <!--START ngdialog delete-confirm-->
     <div ng-include="'app/views/common/confirm-delete.html'"></div>
