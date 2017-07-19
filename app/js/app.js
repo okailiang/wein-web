@@ -171,6 +171,23 @@ App.config(['$stateProvider', '$locationProvider', '$urlRouterProvider', 'RouteH
                 templateUrl: helper.basepath('city.html'),
                 resolve: helper.resolveFor('treeitem', 'toaster', 'ngDialog', 'loaders.css', 'spinkit')
             })
+            .state('app.city-detail', {
+                url: '/city/detail/:id',
+                title: '城市详情',
+                templateUrl: helper.basepath('city-detail.html'),
+                controller: ["$rootScope", "$scope", "$http", 'toaster', '$stateParams', function ($rootScope, $scope, $http, toaster, $stateParams) {
+                    $scope.detail = function () {
+                        var url = '/common/city/getCityById?cityId=' + $stateParams.id;
+                        $http.get(url).success(function (data) {
+                            $scope.cityDetail = data;
+                        }).error(function (data, status, headers, config) {
+                            toaster.pop('error', null, data.message);
+                        });
+                    };
+                    $scope.detail();
+                }],
+                resolve: helper.resolveFor('treeitem', 'toaster', 'ngDialog', 'loaders.css', 'spinkit')
+            })
             .state('app.dashboard', {
                 url: '/dashboard',
                 title: 'Dashboard',
@@ -3602,20 +3619,18 @@ App.controller('UserController', ['$scope', '$http', 'toaster', 'ngDialog', func
 }]);
 
 /**=========================================================
- * Module: 注册城市管理
+ * Module: 城市管理
  * Provides 城市查询、详情
  =========================================================*/
 
-App.controller('CityController', ['$scope', '$http', 'toaster', 'ngDialog', function ($scope, $http, toaster, ngDialog) {
+App.controller('CityController', ['$scope', '$http', 'toaster', 'ngDialog', '$state', function ($scope, $http, toaster, ngDialog, $state) {
     $scope.pageSize = 20;//列表分页每页数
     $scope.currentPage = 1;
     $scope.city = {};
     $scope.provinces = [];
     $scope.searchCitys = [];
-    $scope.searchAreas = [];
-    $scope.province ={};
+    $scope.province = {};
     $scope.searchCity = {};
-    $scope.searchArea = {};
 
     $scope.handleParam = function (value) {
         if (value == undefined || value == null) {
@@ -3625,17 +3640,12 @@ App.controller('CityController', ['$scope', '$http', 'toaster', 'ngDialog', func
     };
 
     $scope.getCityByParent = function (id, type) {
-        if(id == 0){
+        if (id == 0) {
             return;
         }
         var url = '/common/city/listCitysByParentId?parentId=' + id;
         $http.get(url).success(function (data) {
-            if(type == 1){
-                $scope.searchCitys = data;
-            }
-            if(type == 2){
-                $scope.searchAreas = data;
-            }
+            $scope.searchCitys = data;
         }).error(function (data, status, headers, config) {
             toaster.pop('error', null, data.message);
         });
@@ -3643,37 +3653,30 @@ App.controller('CityController', ['$scope', '$http', 'toaster', 'ngDialog', func
 
     $scope.changeProvince = function (province) {
         $scope.searchCitys = [];
-        $scope.searchAreas = [];
         $scope.searchCity = {};
-        $scope.searchArea = {};
         $scope.getCityByParent(province.id, 1);
     };
 
-    $scope.changeCity = function (city) {
-        $scope.searchAreas = [];
-        $scope.searchArea = {};
-        $scope.getCityByParent(city.id, 2);
-    };
-
-    $scope.handleCityId = function(){
+    $scope.handleCityId = function () {
         var cityId = "";
-        if($scope.province.id != undefined){
-            cityId = $scope.province.id;
+        if ($scope.province.id != undefined) {
+            cityId = $scope.province.id < 0 ? "" : $scope.province.id;
         }
-        if(!!$scope.searchCity.id){
+        if (!!$scope.searchCity.id) {
             cityId = $scope.searchCity.id;
-        }
-        if(!!$scope.searchArea.id){
-            cityId = $scope.searchArea.id;
         }
         return cityId;
     };
 
     $scope.initProvince = function () {
         $http.get('/common/city/listProvince').success(function (data) {
-            var defaultProvince =  {};
+            var defaultProvince = {};
+            var allChina = {};
+            allChina.id = -1;
+            allChina.name = '全国';
             defaultProvince.id = 0;
             defaultProvince.name = '省';
+            $scope.provinces.push(allChina);
             $scope.provinces.push(defaultProvince);
             $scope.provinces = $scope.provinces.concat(data);
         }).error(function (data, status, headers, config) {
@@ -3711,7 +3714,8 @@ App.controller('CityController', ['$scope', '$http', 'toaster', 'ngDialog', func
 
     //查询
     $scope.listCitys();
-    $scope.pageChanged = function () {
+    $scope.pageChanged = function (currentPage) {
+        $scope.currentPage = currentPage;
         $scope.listCitys();
     };
 
@@ -3730,47 +3734,39 @@ App.controller('CityController', ['$scope', '$http', 'toaster', 'ngDialog', func
         });
     };
 
-
     /**
-     * 启用或禁用城市
+     * 修改角色
      */
-    $scope.enOrDisableCity = function (city) {
-        if (city.status == 0) {
-            $scope.deleteContent = "确认禁用该城市吗？";
-        } else {
-            $scope.deleteContent = "确认启用该城市吗？";
-        }
+    $scope.saveCity = function () {
+        var data = $scope.city;
 
-        ngDialog.openConfirm({
-            template: 'deleteConfirmDialogId',
-            className: 'ngdialog-theme-default',//ngdialog-theme-plain ngdialog-theme-default
-            scope: $scope
-        }).then(function (value) {
-            var data = {
-                id: city.id,
-                status: city.status == 0 ? 1 : 0
-            };
-
-            var url = city.status == 0 ? '/common/city/disableCity' : '/common/city/enableCity';
-            $http
-                .post(url, data)
-                .success(function (data, status, headers, config) {
-                    toaster.pop('success', null, data.message);
-                    $scope.listCitys();
-                }).error(function (data, status, headers, config) {
-                    toaster.pop('error', null, data.message);
-                });
-        });
+        var url = $scope.city.id == undefined ? '/admin/city/save' : '/admin/city/update';
+        $http
+            .post(url, data)
+            .success(function (data, status, headers, config) {
+                $('#saveOrUpdateCityDialog').modal('hide');
+                toaster.pop('success', null, data.message);
+                $scope.city = {};
+                $scope.listCitys();
+            }).error(function (data, status, headers, config) {
+                toaster.pop('error', null, data.message);
+            });
     };
 
     /**
      * 详情
      */
-    $scope.detail = function (id) {
+    $scope.getCity = function (id, type) {
+        $scope.detailFlag = false;
+        $scope.detaildisabled="";
+        if(type == 1){//查看详情
+            $scope.detailFlag = true;
+            $scope.detaildisabled="disabled";
+        }
 
         var url = '/common/city/getCityById?cityId=' + id;
         $http.get(url).success(function (data) {
-            debugger
+            $scope.city = data;
         }).error(function (data, status, headers, config) {
             toaster.pop('error', null, data.message);
         });
