@@ -169,7 +169,7 @@ App.config(['$stateProvider', '$locationProvider', '$urlRouterProvider', 'RouteH
                 url: '/listCitys',
                 title: '城市管理',
                 templateUrl: helper.basepath('city.html'),
-                resolve: helper.resolveFor('treeitem', 'toaster', 'ngDialog', 'loaders.css', 'spinkit')
+                resolve: helper.resolveFor('toaster', 'ngDialog', 'loaders.css', 'spinkit')
             })
             .state('app.city-detail', {
                 url: '/city/detail/:id',
@@ -186,7 +186,13 @@ App.config(['$stateProvider', '$locationProvider', '$urlRouterProvider', 'RouteH
                     };
                     $scope.detail();
                 }],
-                resolve: helper.resolveFor('treeitem', 'toaster', 'ngDialog', 'loaders.css', 'spinkit')
+                resolve: helper.resolveFor('toaster', 'ngDialog', 'loaders.css', 'spinkit')
+            })
+            .state('app.listFeedbacks', {
+                url: '/listFeedbacks',
+                title: '反馈管理',
+                templateUrl: helper.basepath('feedback.html'),
+                resolve: helper.resolveFor('toaster', 'ngDialog', 'loaders.css', 'spinkit')
             })
             .state('app.dashboard', {
                 url: '/dashboard',
@@ -3758,10 +3764,10 @@ App.controller('CityController', ['$scope', '$http', 'toaster', 'ngDialog', '$st
      */
     $scope.getCity = function (id, type) {
         $scope.detailFlag = false;
-        $scope.detaildisabled="";
-        if(type == 1){//查看详情
+        $scope.detaildisabled = "";
+        if (type == 1) {//查看详情
             $scope.detailFlag = true;
-            $scope.detaildisabled="disabled";
+            $scope.detaildisabled = "disabled";
         }
 
         var url = '/common/city/getCityById?cityId=' + id;
@@ -3774,6 +3780,137 @@ App.controller('CityController', ['$scope', '$http', 'toaster', 'ngDialog', '$st
 
 }]);
 
+
+/**=========================================================
+ * Module: 反馈管理
+ * Provides 反馈查询、详情
+ =========================================================*/
+
+App.controller('FeedbackController', ['$scope', '$http', 'toaster', 'ngDialog', '$filter', function ($scope, $http, toaster, ngDialog, $filter) {
+    $scope.pageSize = 20;//列表分页每页数
+    $scope.currentPage = 1;
+    $scope.feedback = {};
+
+    $scope.handleParam = function (value) {
+        if (value == undefined || value == null) {
+            return '';
+        }
+        return value;
+    };
+
+    $scope.initFeedback = function () {
+        $scope.feedback = {};
+    };
+
+    /**
+     * 查询反馈列表
+     */
+    $scope.listFeedbacks = function () {
+        $scope.loading = true;
+        $scope.feedbacks = [];
+        var listUrl = '/admin/feedback/listWithPage';
+        var pageParam = '&pageSize=' + $scope.pageSize + '&curPage=' + $scope.currentPage
+        var listParam = '?time=' + (new Date().getTime())
+            + "&id=" + $scope.handleParam($scope.searchFeedbackId)
+            + "&creator=" + $scope.handleParam($scope.searchUserName)
+            + "&status=" + $scope.handleParam($scope.searchStatus)
+            + "&type=" + $scope.handleParam($scope.searchType)
+            + "&createTimeFrom=" + (!$scope.createTimeFrom ? "" : $filter('date')($scope.createTimeFrom, 'yyyy-MM-dd'))
+            + "&createTimeTo=" + (!$scope.createTimeTo ? "" : $filter('date')($scope.createTimeTo, 'yyyy-MM-dd'));
+        $http.get(listUrl + listParam + pageParam).success(function (data) {
+            $scope.loading = false;
+            $scope.totalItems = data.totalCount;
+            $scope.feedbacks = data.resultList;
+        }).error(function (data, status, headers, config) {
+            toaster.pop('error', null, data.message);
+        });
+    };
+
+    //查询
+    $scope.listFeedbacks();
+    $scope.pageChanged = function (currentPage) {
+        $scope.currentPage = currentPage;
+        $scope.listFeedbacks();
+    };
+
+    /**
+     * 确认弹出框
+     */
+    $scope.openConfirm = function (id) {
+        $scope.deleteContent = "确认删除吗";
+        ngDialog.openConfirm({
+            template: 'deleteConfirmDialogId',
+            className: 'ngdialog-theme-default',//ngdialog-theme-plain ngdialog-theme-default
+            scope: $scope
+        }).then(function (value) {
+            //删除
+            $scope.removeFeedback(id);
+        });
+    };
+
+    /**
+     * 修改反馈
+     */
+    $scope.updateFeedback = function (id) {
+        var data = {
+            id: id,
+            status: 1
+        };
+        var url = '/admin/feedback/updateStatus';
+        $http
+            .post(url, data)
+            .success(function (data, status, headers, config) {
+                $('#saveOrUpdateFeedbackDialog').modal('hide');
+                toaster.pop('success', null, data.message);
+                $scope.feedback = {};
+                $scope.listFeedbacks();
+            }).error(function (data, status, headers, config) {
+                toaster.pop('error', null, data.message);
+            });
+    };
+
+    /**
+     * 详情
+     */
+    $scope.getFeedback = function (id, type) {
+        var url = '/admin/feedback/getById?id=' + id;
+        $http.get(url).success(function (data) {
+            $scope.feedback = data;
+        }).error(function (data, status, headers, config) {
+            toaster.pop('error', null, data.message);
+        });
+    };
+
+    $scope.format = 'yyyy/MM/dd';
+    $scope.today = function () {
+        //$scope.createTimeTo = $filter('date')(new Date(), $scope.format);
+    };
+    $scope.today();
+
+    $scope.clear = function () {
+        $scope.createTimeTo = null;
+    };
+
+
+    $scope.toggleMin = function () {
+        $scope.minDate = $scope.minDate ? null : new Date();
+    };
+    //$scope.toggleMin();
+
+    $scope.open = function ($event,type) {
+        $event.preventDefault();
+        $event.stopPropagation();
+        $scope.opened = false;
+        $scope.opened1=false;
+        if(type ==1){
+            $scope.opened = true;
+        }
+        if(type ==2){
+            $scope.opened1 = true;
+        }
+    };
+
+}]);
 
 /**=========================================================
  * Module: demo-panels.js
