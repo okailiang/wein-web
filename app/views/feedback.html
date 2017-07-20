@@ -1,0 +1,151 @@
+<h3>反馈管理
+    <small>反馈管理</small>
+</h3>
+<div ng-controller="FeedbackController">
+
+    <!-- START panel-->
+    <div class="panel panel-default">
+        <toaster-container
+                toaster-options="{'position-class': 'toast-center', 'close-button':true}"></toaster-container>
+        <div class="text-center panel-heading line">
+
+            <form feedback="form" name="searchForm" ng-submit="listFeedbacks()"
+                  class="form-inline ng-pristine ng-valid">
+                <div class="row">
+                    <div class="col-lg-3 col-md-3 col-xs-5">
+                        <div class="form-group">
+                            <label for="feedback-id" class="control-label">id：</label>
+                            <input id="feedback-id" type="number" name="feedbackId" ng-model="searchFeedbackId"
+                                   min="1" max="922337203685477" placeholder="输入id"
+                                   class="input-sm form-control">
+                        </div>
+                    </div>
+                    <div class="col-lg-2 col-md-3 col-xs-5">
+                        <div class="form-group">
+                            <label class="control-label">类型： </label>
+                            <select class="input-sm form-control search-feedback-w" ng-model="searchType">
+                                <option value="">全部</option>
+                                <option value="1">建议</option>
+                                <option value="2">问题</option>
+                                <option value="3">喜欢</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-2 col-md-3 col-xs-5">
+                        <div class="form-group">
+                            <label class="control-label">状态： </label>
+                            <select class="input-sm form-control search-feedback-w" ng-model="searchStatus">
+                                <option value="">全部</option>
+                                <option value="0">未处理</option>
+                                <option value="1">已处理</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-4 col-md-4 col-xs-5">
+                        <div class="form-group">
+                            <label for="feedback-creator" class="control-label">反馈人：</label>
+                            <input type="text" id="feedback-creator" name="searchUserName" ng-model="searchUserName"
+                                   maxlength="5" placeholder="输入反馈人名字"
+                                   class="input-sm form-control">
+                        </div>
+                    </div>
+
+                </div>
+                <div class="row mt-lg">
+                    <div class="col-lg-7 col-md-6 col-xs-12">
+                        <div class="form-group">
+                            <label for="feedback-createTimeFrom" class="control-label">反馈时间：</label>
+                            <input id="feedback-createTimeFrom" name="feedbackName" ng-model="createTimeFrom"
+                                   type="text" placeholder="请选择开始时间" class="input-sm form-control"
+                                   datepicker-popup="{{format}}" is-open="opened" min-date="minDate"
+                                   max-date="createTimeTo" datepicker-options="dateOptions"
+                                   close-text="Close">
+
+                            <button type="button" ng-click="open($event,1)" class="btn btn-default btn-sm ml-f">
+                                <em class="fa fa-calendar"></em>
+                            </button>
+                        </div>
+                        -
+                        <div class="form-group">
+                            <input id="feedback-createTimeTo" name="createTimeTo" ng-model="createTimeTo" type="text"
+                                   placeholder="请选择结束时间" class="input-sm form-control"
+                                   datepicker-popup="{{format}}" is-open="opened1" min-date="createTimeFrom"
+                                   max-date="'2018-06-22 00:00:00'" datepicker-options="dateOptions"
+                                   close-text="Close">
+
+                            <button type="button" ng-click="open($event,2)" class="btn btn-default btn-sm ml-f">
+                                <em class="fa fa-calendar"></em>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-1 col-md-1 col-xs-3">
+                        <div class="form-group">
+                            <button type="submit" class="btn btn-sm btn-info" data-loading-text="查询中">查询</button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+
+        </div>
+
+        <div class="panel-body table-padding">
+            <!-- START table-responsive-->
+            <div class="table-responsive">
+                <table class="table table-striped table-hover table-bordered thead-color">
+                    <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>类型</th>
+                        <th>反馈信息</th>
+                        <th>图片</th>
+                        <th>反馈人</th>
+                        <th>状态</th>
+                        <th>反馈时间</th>
+                        <th>修改人</th>
+                        <th>修改时间</th>
+                        <th>操作</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr ng-repeat="feedback in feedbacks">
+                        <td>{{ feedback.id }}</td>
+                        <td>{{ feedback.typeDesc}}</td>
+                        <td title="{{ feedback.feedInfo}}">{{ feedback.feedInfo}}</td>
+                        <td>{{ feedback.feedImage}}</td>
+                        <td>{{ feedback.creator}}</td>
+                        <td>{{ feedback.statusDesc}}</td>
+                        <td>{{ feedback.createTime | date:'yyyy-MM-dd hh:mm:ss'}}</td>
+                        <td>{{ feedback.modifier}}</td>
+                        <td>{{ feedback.modifyTime | date:'yyyy-MM-dd hh:mm:ss'}}</td>
+                        <td>
+                            <button type="button" title="置已处理" ng-click="updateFeedback(feedback.id)"
+                                    class="btn btn-sm bg-inherit no-border">
+                                <em class="fa fa-pencil font-s-16"></em>
+                            </button>
+                            <button type="button" title="详情" data-toggle="modal"
+                                    data-target="#saveOrUpdateFeedbackDialog"
+                                    ng-click="getFeedback(feedback.id, 1)" class="btn btn-link btn-sm no-border">
+                                <!--<span class="text-info">详情</span>  fa-comment-o-->
+                                <!--<a class="no-decoration text-info" ui-sref="app.feedback-detail({id:feedback.id})">-->
+                                <em class="fa fa-comment-o font-s-16"></em>
+                                <!--</a>-->
+                            </button>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+            <!-- END table-responsive-->
+            <!-- pagination-tab -->
+            <div ng-include="'app/views/common/pagination-tab.html'"></div>
+        </div>
+    </div>
+    <!-- END panel-->
+
+    <!--START ngdialog delete-confirm-->
+    <div ng-include="'app/views/common/confirm-delete.html'"></div>
+    <!--END ngdialog-->
+</div>
