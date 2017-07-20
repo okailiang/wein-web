@@ -65,16 +65,16 @@
                         <td>{{ role.modifyTime | date:'yyyy-MM-dd hh:mm:ss'}}</td>
                         <td style="text-align: center;">
                             <button type="button" title="编辑" data-toggle="modal" data-target="#saveOrUpdateRoleDialog"
-                                    ng-click="getRole(role.id)" class="btn btn-sm bg-inherit no-border">
+                                    ng-click="getRole(role.id)" class="btn btn-link no-border">
                                 <em class="fa fa-pencil font-s-16"></em>
                             </button>
                             <button type="button" title="删除"
-                                    ng-click="openConfirm(role.id)" class="btn btn-sm bg-inherit no-border">
+                                    ng-click="openConfirm(role.id)" class="btn btn-link no-border">
                                 <em class="fa fa-trash-o font-s-16"></em>
                             </button>
                             <button type="button" title="添加菜单权限" data-toggle="modal"
                                     data-target="#saveOrUpdateMenuDialog" ng-click="setMenus(role.id)"
-                                    class="btn btn-sm bg-inherit no-border">
+                                    class="btn btn-link no-border">
                                 <em class="fa fa-gears font-s-16"></em>
                             </button>
                         </td>
@@ -85,20 +85,8 @@
             <!-- END table-responsive-->
             <!--</div>-->
             <!--<div class="panel-footer">-->
-            <div class="text-center table-pagination" ng-show="totalItems > 0">
-                <div class="pagination-total-page">共{{totalItems}}条 / {{numPages}}页</div>
-                <pagination class="pagination-tab pagination-sm" total-items="totalItems" ng-change="pageChanged()"
-                            ng-model="currentPage"
-                            max-size="4" previous-text="上页" next-text="下页" first-text="首页" last-text="尾页"
-                            boundary-links="true" direction-links="false" rotate="false" items-per-page="pageSize"
-                            num-pages="numPages"></pagination>
-            </div>
-            <div class="ball-pulse text-center no-data" ng-show="loading">
-                <div></div>
-                <div></div>
-                <div></div>
-            </div>
-            <div class="text-center text-danger no-data" ng-show="totalItems == 0">暂无数据</div>
+            <!-- pagination-tab -->
+            <div ng-include="'app/views/common/pagination-tab.html'"></div>
         </div>
     </div>
     <!-- END panel-->

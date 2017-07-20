@@ -83,19 +83,19 @@
                         <td>
                             <button type="button" title="编辑" data-toggle="modal"
                                     data-target="#saveOrUpdateSysUserDialog"
-                                    ng-click="getSysUser(sysUser.id)" class="btn btn-sm bg-inherit no-border">
+                                    ng-click="getSysUser(sysUser.id)" class="btn btn-link no-border">
                                 <em class="fa fa-pencil font-s-16"></em>
                             </button>
                             <button type="button" title="删除"
-                                    ng-click="openConfirm(sysUser.id)" class="btn btn-sm bg-inherit no-border">
+                                    ng-click="openConfirm(sysUser.id)" class="btn btn-link no-border">
                                 <em class="fa fa-trash-o font-s-16"></em>
                             </button>
-                            <button type="button" ng-click="enOrDisableUser(sysUser)" class="btn btn-sm bg-inherit no-border">
+                            <button type="button" ng-click="enOrDisableUser(sysUser)" class="btn btn-link no-border">
                                 <em class="fa fa-lock font-s-16" ng-show="{{sysUser.status==0}}" title="禁用"></em>
                                 <em class="fa fa-unlock font-s-16" ng-show="{{sysUser.status==1}}" title="启用"></em>
                             </button>
                             <button type="button" title="重置密码"
-                                    ng-click="resetPassword(sysUser.id)" class="btn btn-link btn-sm no-border">
+                                    ng-click="resetPassword(sysUser.id)" class="btn btn-link no-border">
                                 <span class="text-info">重置密码</span>
                             </button>
                         </td>
@@ -106,20 +106,8 @@
             <!-- END table-responsive-->
             <!--</div>-->
             <!--<div class="panel-footer">-->
-            <div class="text-center table-pagination" ng-show="totalItems > 0">
-                <div class="pagination-total-page">共{{totalItems}}条 / {{numPages}}页</div>
-                <pagination class="pagination-tab pagination-sm" total-items="totalItems" ng-change="pageChanged()"
-                            ng-model="currentPage"
-                            max-size="4" previous-text="上页" next-text="下页" first-text="首页" last-text="尾页"
-                            boundary-links="true" direction-links="false" rotate="false" items-per-page="pageSize"
-                            num-pages="numPages"></pagination>
-            </div>
-            <div class="ball-pulse text-center no-data" ng-show="loading">
-                <div></div>
-                <div></div>
-                <div></div>
-            </div>
-            <div class="text-center text-danger no-data" ng-show="totalItems == 0">暂无数据</div>
+            <!-- pagination-tab -->
+            <div ng-include="'app/views/common/pagination-tab.html'"></div>
         </div>
     </div>
     <!-- END panel-->

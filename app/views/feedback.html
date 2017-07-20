@@ -59,9 +59,8 @@
                             <label for="feedback-createTimeFrom" class="control-label">反馈时间：</label>
                             <input id="feedback-createTimeFrom" name="feedbackName" ng-model="createTimeFrom"
                                    type="text" placeholder="请选择开始时间" class="input-sm form-control"
-                                   datepicker-popup="{{format}}" is-open="opened" min-date="minDate"
-                                   max-date="createTimeTo" datepicker-options="dateOptions"
-                                   close-text="Close">
+                                   datepicker-popup="yyyy-MM-dd" is-open="opened" min-date=""
+                                   max-date="createTimeTo">
 
                             <button type="button" ng-click="open($event,1)" class="btn btn-default btn-sm ml-f">
                                 <em class="fa fa-calendar"></em>
@@ -71,9 +70,8 @@
                         <div class="form-group">
                             <input id="feedback-createTimeTo" name="createTimeTo" ng-model="createTimeTo" type="text"
                                    placeholder="请选择结束时间" class="input-sm form-control"
-                                   datepicker-popup="{{format}}" is-open="opened1" min-date="createTimeFrom"
-                                   max-date="'2018-06-22 00:00:00'" datepicker-options="dateOptions"
-                                   close-text="Close">
+                                   datepicker-popup="yyyy-MM-dd" is-open="opened2" min-date="createTimeFrom"
+                                   max-date="">
 
                             <button type="button" ng-click="open($event,2)" class="btn btn-default btn-sm ml-f">
                                 <em class="fa fa-calendar"></em>
@@ -113,8 +111,10 @@
                     <tr ng-repeat="feedback in feedbacks">
                         <td>{{ feedback.id }}</td>
                         <td>{{ feedback.typeDesc}}</td>
-                        <td title="{{ feedback.feedInfo}}">{{ feedback.feedInfo}}</td>
-                        <td>{{ feedback.feedImage}}</td>
+                        <td title="{{ feedback.feedInfo}}" class="td-max-width">
+                            <div class="text-overflow">{{ feedback.feedInfo}}</div>
+                        </td>
+                        <td title="{{ feedback.feedImage}}" class="td-img-width">{{ feedback.feedImage}}</td>
                         <td>{{ feedback.creator}}</td>
                         <td>{{ feedback.statusDesc}}</td>
                         <td>{{ feedback.createTime | date:'yyyy-MM-dd hh:mm:ss'}}</td>
@@ -122,16 +122,17 @@
                         <td>{{ feedback.modifyTime | date:'yyyy-MM-dd hh:mm:ss'}}</td>
                         <td>
                             <button type="button" title="置已处理" ng-click="updateFeedback(feedback.id)"
-                                    class="btn btn-sm bg-inherit no-border">
-                                <em class="fa fa-pencil font-s-16"></em>
+                                    class="btn btn-link no-border" ng-show="{{feedback.status==0}}">
+                                <em class="fa fa-bookmark-o font-s-16"></em>
+                            </button>
+                            <button type="button" title="删除"
+                                    ng-click="removeFeedback(feedback.id)" class="btn btn-link no-border">
+                                <em class="fa fa-trash-o font-s-16"></em>
                             </button>
                             <button type="button" title="详情" data-toggle="modal"
                                     data-target="#saveOrUpdateFeedbackDialog"
-                                    ng-click="getFeedback(feedback.id, 1)" class="btn btn-link btn-sm no-border">
-                                <!--<span class="text-info">详情</span>  fa-comment-o-->
-                                <!--<a class="no-decoration text-info" ui-sref="app.feedback-detail({id:feedback.id})">-->
+                                    ng-click="getFeedback(feedback.id)" class="btn btn-link no-border">
                                 <em class="fa fa-comment-o font-s-16"></em>
-                                <!--</a>-->
                             </button>
                         </td>
                     </tr>
@@ -144,6 +145,113 @@
         </div>
     </div>
     <!-- END panel-->
+
+    <!-- START 详情弹出框（Modal） -->
+    <div class="modal fade" id="saveOrUpdateFeedbackDialog" data-backdrop="static" data-keyboard="false"
+         aria-hidden="true"
+         tabindex="-1" role="dialog">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header modal-padding">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true"
+                            ng-click="initFeedback()">
+                        &times;
+                    </button>
+                    <h4 class="modal-title" ng-show="feedback.id != undefined">
+                        详情
+                    </h4>
+                </div>
+                <div class="modal-body">
+                    <form name="roleForm" ng-submit="#" novalidate=""
+                          class="form-horizontal form-validate ng-pristine ng-valid">
+
+                        <div class="form-group">
+                            <label class="control-label col-lg-3 col-md-3 col-sm-3">状态：
+                            </label>
+
+                            <div class="col-lg-8 col-md-8 col-sm-8">
+                                <div class="pt-7"><strong>{{feedback.statusDesc}}</strong></div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="control-label col-lg-3 col-md-3 col-sm-3">类型：
+                            </label>
+
+                            <div class="col-lg-8 col-md-8 col-sm-8">
+                                <div class="pt-7">{{feedback.typeDesc}}</div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="control-label col-lg-3 col-md-3 col-sm-3">反馈信息：
+                            </label>
+
+                            <div class="col-lg-8 col-md-8 col-sm-8">
+                                <div class="pt-7">{{feedback.feedInfo}}</div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="control-label col-lg-3 col-md-3 col-sm-3">截图：
+                            </label>
+
+                            <div class="col-lg-8 col-md-8 col-sm-8">
+                                <div class="pt-7"><img src="{{feedback.feedImage}}" alt="无截图"
+                                                       class="detail-img">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="control-label col-lg-3 col-md-3 col-sm-3">反馈人：
+                            </label>
+
+                            <div class="col-lg-8 col-md-8 col-sm-8">
+                                <div class="pt-7">{{feedback.creator}}</div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="control-label col-lg-3 col-md-3 col-sm-3">反馈时间：
+                            </label>
+
+                            <div class="col-lg-8 col-md-8 col-sm-8">
+                                <div class="pt-7">{{ feedback.createTime | date:'yyyy-MM-dd hh:mm:ss'}}</div>
+                            </div>
+                        </div>
+
+                        <div class="form-group" ng-show="feedback.status==1">
+                            <label class="control-label col-lg-3 col-md-3 col-sm-3">处理人：
+                            </label>
+
+                            <div class="col-lg-8 col-md-8 col-sm-8">
+                                <div class="pt-7">{{feedback.modifier}}</div>
+                            </div>
+                        </div>
+
+                        <div class="form-group" ng-show="feedback.status==1">
+                            <label class="control-label col-lg-3 col-md-3 col-sm-3">处理时间：
+                            </label>
+
+                            <div class="col-lg-8 col-md-8 col-sm-8">
+                                <div class="pt-7">{{ feedback.modifyTime | date:'yyyy-MM-dd hh:mm:ss'}}</div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer modal-padding">
+                    <div class="text-center">
+                        <button type="button" class="btn btn-default" data-dismiss="modal" ng-click="initRole()">取消
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <!-- /.modal-content -->
+        </div>
+        <!-- /.modal -->
+    </div>
+    <!-- START 详情弹出框（Modal） -->
 
     <!--START ngdialog delete-confirm-->
     <div ng-include="'app/views/common/confirm-delete.html'"></div>

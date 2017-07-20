@@ -19711,11 +19711,11 @@ function $LocaleProvider() {
 
       DATETIME_FORMATS: {
         MONTH:
-            'January,February,March,April,May,June,July,August,September,October,November,December'
+            '一月,二月,三月,四月,五月,六月,七月,八月,九月,十月,十一月,十二月'
             .split(','),
         SHORTMONTH:  'Jan,Feb,Mar,Apr,May,Jun,Jul,Aug,Sep,Oct,Nov,Dec'.split(','),
         DAY: 'Sunday,Monday,Tuesday,Wednesday,Thursday,Friday,Saturday'.split(','),
-        SHORTDAY: 'Sun,Mon,Tue,Wed,Thu,Fri,Sat'.split(','),
+        SHORTDAY: '日,一,二,三,四,五,六'.split(','),
         AMPMS: ['AM','PM'],
         medium: 'MMM d, y h:mm:ss a',
         'short': 'M/d/yy h:mm a',
@@ -52689,9 +52689,9 @@ angular.module('ui.bootstrap.datepicker', ['ui.bootstrap.dateparser', 'ui.bootst
 
 .constant('datepickerPopupConfig', {
   datepickerPopup: 'yyyy-MM-dd',
-  currentText: 'Today',
-  clearText: 'Clear',
-  closeText: 'Done',
+  currentText: '今天',
+  clearText: '清除',
+  closeText: '关闭',
   closeOnDateSelection: true,
   appendToBody: false,
   showButtonBar: true

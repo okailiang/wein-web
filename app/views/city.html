@@ -119,11 +119,11 @@
                         <td>{{ city.modifyTime | date:'yyyy-MM-dd hh:mm:ss'}}</td>
                         <td>
                             <button type="button" title="编辑" data-toggle="modal" data-target="#saveOrUpdateCityDialog"
-                                    ng-click="getCity(city.id)" class="btn btn-sm bg-inherit no-border">
+                                    ng-click="getCity(city.id)" class="btn btn-link no-border">
                                 <em class="fa fa-pencil font-s-16"></em>
                             </button>
                             <button type="button" title="详情" data-toggle="modal" data-target="#saveOrUpdateCityDialog"
-                                    ng-click="getCity(city.id, 1)" class="btn btn-link btn-sm no-border">
+                                    ng-click="getCity(city.id, 1)" class="btn btn-link no-border">
                                 <!--<span class="text-info">详情</span>  fa-comment-o-->
                                 <!--<a class="no-decoration text-info" ui-sref="app.city-detail({id:city.id})">-->
                                 <em class="fa fa-comment-o font-s-16"></em>

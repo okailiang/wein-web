@@ -192,7 +192,13 @@ App.config(['$stateProvider', '$locationProvider', '$urlRouterProvider', 'RouteH
                 url: '/listFeedbacks',
                 title: '反馈管理',
                 templateUrl: helper.basepath('feedback.html'),
-                resolve: helper.resolveFor('toaster', 'ngDialog', 'loaders.css', 'spinkit')
+                resolve: helper.resolveFor('toaster', 'ngDialog', 'loaders.css')
+            })
+            .state('app.listPrintShops', {
+                url: '/listPrintShops',
+                title: '打印店管理',
+                templateUrl: helper.basepath('print-shop.html'),
+                resolve: helper.resolveFor('toaster', 'ngDialog', 'loaders.css')
             })
             .state('app.dashboard', {
                 url: '/dashboard',
@@ -3077,7 +3083,8 @@ App.controller('RoleController', ['$scope', '$http', 'toaster', 'ngDialog', func
 
     //查询
     $scope.listRoles();
-    $scope.pageChanged = function () {
+    $scope.pageChanged = function (currentPage) {
+        $scope.currentPage = currentPage;
         $scope.listRoles();
     };
 
@@ -3329,7 +3336,8 @@ App.controller('SysUserController', ['$scope', '$http', 'toaster', 'ngDialog', f
 
     //查询
     $scope.listSysUsers();
-    $scope.pageChanged = function () {
+    $scope.pageChanged = function (currentPage) {
+        $scope.currentPage = currentPage;
         $scope.listSysUsers();
     };
 
@@ -3542,7 +3550,8 @@ App.controller('UserController', ['$scope', '$http', 'toaster', 'ngDialog', func
 
     //查询
     $scope.listUsers();
-    $scope.pageChanged = function () {
+    $scope.pageChanged = function (currentPage) {
+        $scope.currentPage = currentPage;
         $scope.listUsers();
     };
 
@@ -3696,7 +3705,7 @@ App.controller('CityController', ['$scope', '$http', 'toaster', 'ngDialog', '$st
     };
 
     /**
-     * 查询角色列表
+     * 查询城市列表
      */
     $scope.listCitys = function () {
         $scope.loading = true;
@@ -3741,7 +3750,7 @@ App.controller('CityController', ['$scope', '$http', 'toaster', 'ngDialog', '$st
     };
 
     /**
-     * 修改角色
+     * 修改城市
      */
     $scope.saveCity = function () {
         var data = $scope.city;
@@ -3837,7 +3846,7 @@ App.controller('FeedbackController', ['$scope', '$http', 'toaster', 'ngDialog', 
      * 确认弹出框
      */
     $scope.openConfirm = function (id) {
-        $scope.deleteContent = "确认删除吗";
+        $scope.deleteContent = "确认删除该条数据吗";
         ngDialog.openConfirm({
             template: 'deleteConfirmDialogId',
             className: 'ngdialog-theme-default',//ngdialog-theme-plain ngdialog-theme-default
@@ -3849,30 +3858,62 @@ App.controller('FeedbackController', ['$scope', '$http', 'toaster', 'ngDialog', 
     };
 
     /**
+     * 删除删除反馈信息
+     */
+    $scope.removeFeedback = function (id) {
+        $scope.deleteContent = "确认删除该条数据吗";
+        ngDialog.openConfirm({
+            template: 'deleteConfirmDialogId',
+            className: 'ngdialog-theme-default',//ngdialog-theme-plain ngdialog-theme-default
+            scope: $scope
+        }).then(function (value) {
+            //删除
+            var data = {
+                id: id
+            };
+            $http
+                .post('/admin/feedback/remove', data)
+                .success(function (data, status, headers, config) {
+                    toaster.pop('success', null, data.message);
+                    $scope.listFeedbacks();
+                }).error(function (data, status, headers, config) {
+                    toaster.pop('error', null, data.message);
+                });
+        });
+
+    };
+    /**
      * 修改反馈
      */
     $scope.updateFeedback = function (id) {
-        var data = {
-            id: id,
-            status: 1
-        };
-        var url = '/admin/feedback/updateStatus';
-        $http
-            .post(url, data)
-            .success(function (data, status, headers, config) {
-                $('#saveOrUpdateFeedbackDialog').modal('hide');
-                toaster.pop('success', null, data.message);
-                $scope.feedback = {};
-                $scope.listFeedbacks();
-            }).error(function (data, status, headers, config) {
-                toaster.pop('error', null, data.message);
-            });
+        $scope.deleteContent = "确认置该条反馈为已处理吗";
+        ngDialog.openConfirm({
+            template: 'deleteConfirmDialogId',
+            className: 'ngdialog-theme-default',//ngdialog-theme-plain ngdialog-theme-default
+            scope: $scope
+        }).then(function (value) {
+            var data = {
+                id: id,
+                status: 1
+            };
+            var url = '/admin/feedback/updateStatus';
+            $http
+                .post(url, data)
+                .success(function (data, status, headers, config) {
+                    $('#saveOrUpdateFeedbackDialog').modal('hide');
+                    toaster.pop('success', null, data.message);
+                    $scope.feedback = {};
+                    $scope.listFeedbacks();
+                }).error(function (data, status, headers, config) {
+                    toaster.pop('error', null, data.message);
+                });
+        });
     };
 
     /**
      * 详情
      */
-    $scope.getFeedback = function (id, type) {
+    $scope.getFeedback = function (id) {
         var url = '/admin/feedback/getById?id=' + id;
         $http.get(url).success(function (data) {
             $scope.feedback = data;
@@ -3881,36 +3922,46 @@ App.controller('FeedbackController', ['$scope', '$http', 'toaster', 'ngDialog', 
         });
     };
 
-    $scope.format = 'yyyy/MM/dd';
-    $scope.today = function () {
-        //$scope.createTimeTo = $filter('date')(new Date(), $scope.format);
-    };
-    $scope.today();
-
-    $scope.clear = function () {
-        $scope.createTimeTo = null;
-    };
-
-
-    $scope.toggleMin = function () {
-        $scope.minDate = $scope.minDate ? null : new Date();
-    };
-    //$scope.toggleMin();
-
-    $scope.open = function ($event,type) {
+    /**
+     * 显示日历
+     * @param $event
+     * @param type
+     */
+    $scope.open = function ($event, type) {
         $event.preventDefault();
         $event.stopPropagation();
-        $scope.opened = false;
-        $scope.opened1=false;
-        if(type ==1){
-            $scope.opened = true;
+
+        if (type == 1) {
+            $scope.opened2 = false;
+            if($scope.opened){
+                $scope.opened = false;
+            }else{
+                $scope.opened = true;
+            }
         }
-        if(type ==2){
-            $scope.opened1 = true;
+        if (type == 2) {
+            $scope.opened = false;
+            if($scope.opened2){
+                $scope.opened2 = false;
+            }else{
+                $scope.opened2 = true;
+            }
         }
     };
-
 }]);
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 /**=========================================================
  * Module: demo-panels.js
