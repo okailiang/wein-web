@@ -12950,8 +12950,12 @@ flatdoc .button .badge {
     /*max-width: 80px;*/
 }
 
+.no-decoration{
+    color: #95a5ac;
+}
 .no-decoration:hover {
     text-decoration: none;
+    color: #5d9cec;
 }
 
 .text-overflow {
@@ -12992,4 +12996,22 @@ flatdoc .button .badge {
 }
 .menu-operate>em:hover{
     color:#23d3e5 ;
+}
+.max-w-100{
+    max-width: 100px;
+}
+.max-w-120{
+    max-width: 120px;
+}
+.max-w-70{
+    max-width: 70px;
+}
+.btn-back{
+    float: right;
+}
+.btn-back:hover{
+    float: right;
+    color: #ffffff;
+    background-color: #23b7e5;
+    border-color: #1eb6e4;
 }
