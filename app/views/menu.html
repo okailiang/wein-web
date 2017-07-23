@@ -7,7 +7,8 @@
         <toaster-container
                 toaster-options="{'position-class': 'toast-center', 'close-button':true}"></toaster-container>
         <div class="menu-onelevel"><strong>一级菜单</strong>
-            <em class="fa fa-plus-circle text-info" ng-click="addMenu()" title="添加主一级菜单" data-toggle="modal" data-target="#saveOrUpdateDialog"></em>
+            <em class="fa fa-plus-circle text-info" ng-click="addMenu()" title="添加主一级菜单" data-toggle="modal"
+                data-target="#saveOrUpdateDialog"></em>
             <em class="fa fa-refresh text-info {{loadingIcon}}" ng-click="refreshMenus()" title="重新加载菜单"></em>
         </div>
         <!--  构建菜单树-->
@@ -88,7 +89,7 @@
                             <div class="col-lg-8 col-md-8 col-sm-8">
                                 <input type="text" name="url" ng-model="menu.url"
                                        placeholder="请填写字母、数字，2-50字符" class="form-control" maxlength="50"
-                                       ng-pattern="/^[\w/._=?-\\#\\+&]{2,50}$/" required>
+                                       ng-pattern="/^[\w/._=?\-\\#\\+&]{2,50}$/" required>
                             </div>
                         </div>
 
@@ -96,6 +97,7 @@
                             <label class="control-label col-lg-3 col-md-3 col-sm-3">菜单级别
                                 <span class="text-danger">*</span>
                             </label>
+
                             <div class="col-lg-8 col-md-8 col-sm-8">
                                 <input type="text" name="level" ng-model="menu.level" placeholder="级别，不大于100正整数"
                                        ui-validate="'$value &gt;= 0'&amp;&amp;'$value &lt;= 100'" class="form-control"
@@ -138,7 +140,7 @@
     <!--END 模态框（Modal） -->
 
     <!--START ngdialog delete-confirm-->
-    <div  ng-include="'app/views/common/confirm-delete.html'"></div>
+    <div ng-include="'app/views/common/confirm-delete.html'"></div>
     <!--END ngdialog-->
 
 </div>

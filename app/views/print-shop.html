@@ -1,10 +1,301 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title></title>
-</head>
-<body>
+<h3>打印店管理
+    <small>打印店管理</small>
+</h3>
+<div ng-controller="PrintShopController">
 
-</body>
-</html>
+    <!-- START panel-->
+    <div class="panel panel-default">
+        <toaster-container
+                toaster-options="{'position-class': 'toast-center', 'close-button':true}"></toaster-container>
+        <div class="text-center panel-heading line">
+
+            <form printShop="form" name="searchForm" ng-submit="listPrintShops()"
+                  class="form-inline ng-pristine ng-valid">
+                <div class="row">
+                    <div class="col-lg-3 col-md-3 col-xs-5">
+                        <div class="form-group">
+                            <label for="printShop-id" class="control-label">id：</label>
+                            <input id="printShop-id" type="number" name="printShopId" ng-model="searchPrintShopId"
+                                   min="1" max="922337203685477" placeholder="输入id"
+                                   class="input-sm form-control max-w-120">
+                        </div>
+                    </div>
+
+                    <div class="col-lg-3 col-md-4 col-xs-5">
+                        <div class="form-group">
+                            <label for="printShop-name" class="control-label">打印店名：</label>
+                            <input type="text" id="printShop-name" name="searchPrintShopName" ng-model="searchPrintShopName"
+                                   maxlength="50" placeholder="输入打印店名字"
+                                   class="input-sm form-control max-w-120">
+                        </div>
+                    </div>
+
+                    <div class="col-lg-5 col-md-6 col-xs-12">
+                        <div class="form-group">
+                            <label for="printShop-createTimeFrom" class="control-label">开店时间：</label>
+                            <input id="printShop-createTimeFrom" name="printShopName" ng-model="createTimeFrom"
+                                   type="text" placeholder="选择开始时间" class="input-sm form-control max-w-100"
+                                   datepicker-popup="yyyy-MM-dd" is-open="opened" min-date=""
+                                   max-date="createTimeTo">
+
+                            <button type="button" ng-click="open($event,1)" class="btn btn-default btn-sm ml-f">
+                                <em class="fa fa-calendar"></em>
+                            </button>
+                        </div>
+                        -
+                        <div class="form-group">
+                            <input id="printShop-createTimeTo" name="createTimeTo" ng-model="createTimeTo" type="text"
+                                   placeholder="选择结束时间" class="input-sm form-control max-w-100"
+                                   datepicker-popup="yyyy-MM-dd" is-open="opened2" min-date="createTimeFrom"
+                                   max-date="">
+
+                            <button type="button" ng-click="open($event,2)" class="btn btn-default btn-sm ml-f">
+                                <em class="fa fa-calendar"></em>
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+                <div class="row mt-lg">
+                    <div class="col-lg-3 col-md-5 col-xs-6">
+                        <div class="form-group">
+                            <label class="control-label">省： </label>
+                            <select class="input-sm form-control max-w-70" ng-change="changeProvince(province)"
+                                    ng-model="province" ng-options="x.name for x in provinces">
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="control-label">市： </label>
+                            <select class="input-sm form-control max-w-70" ng-model="searchCity"
+                                    ng-options="x.name for x in searchCitys">
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-3 col-md-4 col-xs-5">
+                        <div class="form-group">
+                            <label for="printShop-creator" class="control-label">打印店主：</label>
+                            <input type="text" id="printShop-creator" name="searchUserName" ng-model="searchUserName"
+                                   maxlength="5" placeholder="输入打印店主名字"
+                                   class="input-sm form-control max-w-120">
+                        </div>
+                    </div>
+
+                    <div class="col-lg-2 col-md-3 col-xs-5">
+                        <div class="form-group">
+                            <label class="control-label">类型： </label>
+                            <select class="input-sm form-control search-printShop-w" ng-model="searchType">
+                                <option value="">全部</option>
+                                <option value="1">高校</option>
+                                <option value="2">非高校</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-2 col-md-3 col-xs-5">
+                        <div class="form-group">
+                            <label class="control-label">状态： </label>
+                            <select class="input-sm form-control search-printShop-w" ng-model="searchStatus">
+                                <option value="">全部</option>
+                                <option value="0">启用</option>
+                                <option value="1">禁用</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-1 col-md-1 col-xs-3">
+                        <div class="form-group">
+                            <button type="submit" class="btn btn-sm btn-info" data-loading-text="查询中">查询</button>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-1 col-md-1 col-xs-3 pull-right">
+                        <!--<div class="form-group" > data-toggle="modal" data-target="#saveOrUpdatePrintShopDialog"-->
+                        <a class="no-decoration text-info" ui-sref="app.printShopInfo">
+                            <button type="button"
+                                    class="btn btn-sm btn-info">
+                                开店
+                            </button>
+                        </a>
+                        <!--</div>-->
+                    </div>
+                </div>
+            </form>
+
+        </div>
+
+        <div class="panel-body table-padding">
+            <!-- START table-responsive-->
+            <div class="table-responsive">
+                <table class="table table-striped table-hover table-bordered thead-color">
+                    <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>类型</th>
+                        <th>城市</th>
+                        <th>打印店名称</th>
+                        <th>地址</th>
+                        <th>电话</th>
+                        <th>打印店主</th>
+                        <th>状态</th>
+                        <th>开店时间</th>
+                        <th>修改人</th>
+                        <th>修改时间</th>
+                        <th>操作</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr ng-repeat="printShop in printShops">
+                        <td>{{ printShop.id }}</td>
+                        <td>{{ printShop.addressTypeDesc}}</td>
+                        <td title="printShop.provinceCityArea">{{ printShop.cityName}}</td>
+                        <td title="{{ printShop.printShopName}}" class="td-max-width">
+                            <div class="text-overflow">{{ printShop.printShopName}}</div>
+                        </td>
+                        <td title="{{ printShop.detailAddress}}" class="td-img-width">{{ printShop.detailAddress}}</td>
+                        <td>{{ printShop.phoneNo}}</td>
+                        <td>{{ printShop.printerName}}</td>
+                        <td>{{ printShop.statusDesc}}</td>
+                        <td>{{ printShop.createTime | date:'yyyy-MM-dd hh:mm:ss'}}</td>
+                        <td>{{ printShop.modifier}}</td>
+                        <td>{{ printShop.modifyTime | date:'yyyy-MM-dd hh:mm:ss'}}</td>
+                        <td>
+                            <button type="button" title="置已处理" ng-click="updatePrintShop(printShop.id)"
+                                    class="btn btn-link no-border" ng-show="{{printShop.status==0}}">
+                                <em class="fa fa-bookmark-o font-s-16"></em>
+                            </button>
+                            <button type="button" title="删除"
+                                    ng-click="removePrintShop(printShop.id)" class="btn btn-link no-border">
+                                <em class="fa fa-trash-o font-s-16"></em>
+                            </button>
+                            <button type="button" title="详情" data-toggle="modal"
+                                    data-target="#saveOrUpdatePrintShopDialog"
+                                    ng-click="getPrintShop(printShop.id)" class="btn btn-link no-border">
+                                <em class="fa fa-comment-o font-s-16"></em>
+                            </button>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+            <!-- END table-responsive-->
+            <!-- pagination-tab -->
+            <div ng-include="'app/views/common/pagination-tab.html'"></div>
+        </div>
+    </div>
+    <!-- END panel-->
+
+    <!-- START 详情弹出框（Modal） -->
+    <!--<div class="modal fade" id="saveOrUpdatePrintShopDialog" data-backdrop="static" data-keyboard="false"-->
+         <!--aria-hidden="true"-->
+         <!--tabindex="-1" role="dialog">-->
+        <!--<div class="modal-dialog">-->
+            <!--<div class="modal-content">-->
+                <!--<div class="modal-header modal-padding">-->
+                    <!--<button type="button" class="close" data-dismiss="modal" aria-hidden="true"-->
+                            <!--ng-click="initPrintShop()">-->
+                        <!--&times;-->
+                    <!--</button>-->
+                    <!--<h4 class="modal-title" ng-show="printShop.id == undefined">-->
+                        <!--新增-->
+                    <!--</h4>-->
+                    <!--<h4 class="modal-title" ng-show="printShop.id != undefined">-->
+                        <!--编辑-->
+                    <!--</h4>-->
+                <!--</div>-->
+                <!--<div class="modal-body">-->
+                    <!--<form name="roleForm" ng-submit="#" novalidate=""-->
+                          <!--class="form-horizontal form-validate ng-pristine ng-valid">-->
+
+                        <!--<div class="form-group">-->
+                            <!--<label class="control-label col-lg-3 col-md-3 col-sm-3">状态：-->
+                            <!--</label>-->
+
+                            <!--<div class="col-lg-8 col-md-8 col-sm-8">-->
+                                <!--<div class="pt-7"><strong>{{printShop.statusDesc}}</strong></div>-->
+                            <!--</div>-->
+                        <!--</div>-->
+
+                        <!--<div class="form-group">-->
+                            <!--<label class="control-label col-lg-3 col-md-3 col-sm-3">类型：-->
+                            <!--</label>-->
+
+                            <!--<div class="col-lg-8 col-md-8 col-sm-8">-->
+                                <!--<div class="pt-7">{{printShop.typeDesc}}</div>-->
+                            <!--</div>-->
+                        <!--</div>-->
+
+                        <!--<div class="form-group">-->
+                            <!--<label class="control-label col-lg-3 col-md-3 col-sm-3">打印店信息：-->
+                            <!--</label>-->
+
+                            <!--<div class="col-lg-8 col-md-8 col-sm-8">-->
+                                <!--<div class="pt-7">{{printShop.feedInfo}}</div>-->
+                            <!--</div>-->
+                        <!--</div>-->
+
+                        <!--<div class="form-group">-->
+                            <!--<label class="control-label col-lg-3 col-md-3 col-sm-3">截图：-->
+                            <!--</label>-->
+
+                            <!--<div class="col-lg-8 col-md-8 col-sm-8">-->
+                                <!--<div class="pt-7"><img src="{{printShop.feedImage}}" alt="无截图"-->
+                                                       <!--class="detail-img">-->
+                                <!--</div>-->
+                            <!--</div>-->
+                        <!--</div>-->
+
+                        <!--<div class="form-group">-->
+                            <!--<label class="control-label col-lg-3 col-md-3 col-sm-3">打印店人：-->
+                            <!--</label>-->
+
+                            <!--<div class="col-lg-8 col-md-8 col-sm-8">-->
+                                <!--<div class="pt-7">{{printShop.creator}}</div>-->
+                            <!--</div>-->
+                        <!--</div>-->
+
+                        <!--<div class="form-group">-->
+                            <!--<label class="control-label col-lg-3 col-md-3 col-sm-3">打印店时间：-->
+                            <!--</label>-->
+
+                            <!--<div class="col-lg-8 col-md-8 col-sm-8">-->
+                                <!--<div class="pt-7">{{ printShop.createTime | date:'yyyy-MM-dd hh:mm:ss'}}</div>-->
+                            <!--</div>-->
+                        <!--</div>-->
+
+                        <!--<div class="form-group" ng-show="printShop.status==1">-->
+                            <!--<label class="control-label col-lg-3 col-md-3 col-sm-3">处理人：-->
+                            <!--</label>-->
+
+                            <!--<div class="col-lg-8 col-md-8 col-sm-8">-->
+                                <!--<div class="pt-7">{{printShop.modifier}}</div>-->
+                            <!--</div>-->
+                        <!--</div>-->
+
+                        <!--<div class="form-group" ng-show="printShop.status==1">-->
+                            <!--<label class="control-label col-lg-3 col-md-3 col-sm-3">处理时间：-->
+                            <!--</label>-->
+
+                            <!--<div class="col-lg-8 col-md-8 col-sm-8">-->
+                                <!--<div class="pt-7">{{ printShop.modifyTime | date:'yyyy-MM-dd hh:mm:ss'}}</div>-->
+                            <!--</div>-->
+                        <!--</div>-->
+                    <!--</form>-->
+                <!--</div>-->
+                <!--<div class="modal-footer modal-padding">-->
+                    <!--<div class="text-center">-->
+                        <!--<button type="button" class="btn btn-default" data-dismiss="modal" ng-click="initRole()">取消-->
+                        <!--</button>-->
+                    <!--</div>-->
+                <!--</div>-->
+            <!--</div>-->
+            <!--&lt;!&ndash; /.modal-content &ndash;&gt;-->
+        <!--</div>-->
+        <!--&lt;!&ndash; /.modal &ndash;&gt;-->
+    <!--</div>-->
+    <!-- END 详情弹出框（Modal） -->
+
+    <!--START ngdialog delete-confirm-->
+    <div ng-include="'app/views/common/confirm-delete.html'"></div>
+    <!--END ngdialog-->
+</div>

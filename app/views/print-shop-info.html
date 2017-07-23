@@ -1,0 +1,106 @@
+<h3>打印店管理
+    <small><a class="no-decoration" ui-sref="app.listPrintShops">打印店管理</a>/城市详情</small>
+</h3>
+<div ng-controller="PrintShopController">
+    <!-- START panel-->
+    <div class="panel panel-default">
+        <!-- START 详情弹出框（Modal） -->
+
+        <!--<div class="modal-content">-->
+        <div class="panel-heading modal-padding">
+            <button type="button" class="btn btn-default btn-sm btn-back" data-dismiss="modal" aria-hidden="true"
+                    ng-click="initPrintShop()">
+                返回
+            </button>
+            <!--<h4 class="modal-title" ng-show="printShop.id == undefined">-->
+                <!--新增-->
+            <!--</h4>-->
+            <!--<h4 class="modal-title" ng-show="printShop.id != undefined">-->
+                <!--编辑-->
+            <!--</h4>-->
+        </div>
+        <div class="panel-body">
+            <form name="printShopForm" ng-submit="savePrintShop()" novalidate=""
+                  class="form-horizontal form-validate ng-pristine ng-valid">
+
+                <legend><strong>打印店信息</strong></legend>
+                <div class="form-group">
+                    <label class="control-label col-lg-2 col-md-2 col-sm-3">用户名用户名
+                        <span class="text-danger">*</span>
+                    </label>
+
+                    <div class="col-lg-7 col-md-7 col-sm-7">
+                        <input type="text" name="userName" ng-model="printShop.userName"
+                               placeholder="请填写字母、数字或汉字，2-10字符" class="form-control" maxlength="10"
+                               ng-pattern="/^[a-zA-Z0-9\u4e00-\u9fa5]{2,10}$/"
+                               ng-disabled="{{printShop.id != undefined}}" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="control-label col-lg-2 col-md-2 col-sm-3">邮箱
+                        <span class="text-danger">*</span>
+                    </label>
+
+                    <div class="col-lg-7 col-md-7 col-sm-8">
+                        <input type="email" name="email" ng-model="printShop.email"
+                               placeholder="请填写邮箱" class="form-control" maxlength="50" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="control-label col-lg-2 col-md-2 col-sm-3">手机号
+                        <span class="text-danger">*</span>
+                    </label>
+
+                    <div class="col-lg-7 col-md-7 col-sm-8">
+                        <input type="text" name="phoneNo" ng-model="printShop.phoneNo" class="form-control"
+                               ng-pattern="/^[0-9]{11}$/" maxlength="11" placeholder="请填写手机号"
+                               required>
+                        <span ng-show="printShopForm.phoneNo.$dirty &amp;&amp; printShopForm.phoneNo.$error.required"></span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="control-label col-lg-2 col-md-2 col-sm-3">真实名
+                    </label>
+
+                    <div class="col-lg-7 col-md-7 col-sm-8">
+                        <input type="text" name="realName" ng-model="printShop.realName"
+                               placeholder="请填写字母、数字或汉字，2-10字符" class="form-control" maxlength="10"
+                               ng-pattern="/^[a-zA-Z0-9\u4e00-\u9fa5]{2,10}$/">
+                    </div>
+                </div>
+
+                <legend><strong>打印店主账号信息</strong></legend>
+
+                <div class="form-group">
+                    <label class="control-label col-lg-2 col-md-2 col-sm-3">身份证号
+                    </label>
+
+                    <div class="col-lg-7 col-md-7 col-sm-8">
+                        <input type="text" name="idNumber" ng-model="printShop.idNumber"
+                               placeholder="请填写18个数字" class="form-control" maxlength="18"
+                               ng-pattern="/^[0-9]{18}$/">
+                    </div>
+                </div>
+
+            </form>
+        </div>
+        <div class="panel-footer modal-padding">
+            <div class="text-center">
+                <button type="submit" class="btn btn-primary"
+                        ng-click="savePrintShop()" ng-disabled="printShopForm.$invalid">提交
+                </button>
+                &nbsp;&nbsp;&nbsp;&nbsp;
+                <button type="button" class="btn btn-default" ng-click="initPrintShop()">取消
+                </button>
+            </div>
+        </div>
+    </div>
+    <!-- /.modal-content -->
+
+    <!-- START 详情弹出框（Modal） -->
+    <!--</div>-->
+    <!-- END panel-->
+</div>

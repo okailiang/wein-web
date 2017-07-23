@@ -1,7 +1,7 @@
-<h3>系统用户管理
-    <small>系统用户管理</small>
+<h3>打印店主管理
+    <small>打印店主管理</small>
 </h3>
-<div ng-controller="SysUserController">
+<div ng-controller="PrinterController">
 
     <!-- START panel-->
     <div class="panel panel-default">
@@ -9,40 +9,40 @@
                 toaster-options="{'position-class': 'toast-center', 'close-button':true}"></toaster-container>
         <div class="text-center panel-heading line">
             <div class="row">
-                <form sysUser="form" name="searchForm" ng-submit="listSysUsers()"
+                <form printer="form" name="searchForm" ng-submit="listPrinters()"
                       class="form-inline ng-pristine ng-valid">
                     <div class="col-lg-3 col-md-4 col-xs-5">
                         <div class="form-group">
-                            <label for="sysUser-name" class="control-label">用户名：</label>
-                            <input id="sysUser-name" name="sysUserName" ng-model="searchName" type="text"
+                            <label for="printer-name" class="control-label">用户名：</label>
+                            <input id="printer-name" name="printerName" ng-model="search.name" type="text"
                                    placeholder="输入用户名"
                                    class="input-sm form-control">
                         </div>
                     </div>
                     <div class="col-lg-3 col-md-4 col-xs-5">
                         <div class="form-group">
-                            <label for="sysUser-email" class="control-label">邮箱：</label>
-                            <input id="sysUser-email" name="email" ng-model="searchEmail" type="text"
+                            <label for="printer-email" class="control-label">邮箱：</label>
+                            <input id="printer-email" name="email" ng-model="search.email" type="text"
                                    placeholder="输入用户邮箱"
                                    class="input-sm form-control">
                         </div>
                     </div>
                     <div class="col-lg-3 col-md-4 col-xs-5">
                         <div class="form-group">
-                            <label for="sysUser-phoneNo" class="control-label">手机号：</label>
-                            <input id="sysUser-phoneNo" name="phoneNo" ng-model="searchPhoneNo" type="text"
+                            <label for="printer-phoneNo" class="control-label">手机号：</label>
+                            <input id="printer-phoneNo" name="phoneNo" ng-model="search.phoneNo" type="text"
                                    placeholder="输入用户手机号"
                                    class="input-sm form-control">
                         </div>
                     </div>
 
                     <!--<div class="col-lg-3 col-md-4 col-xs-5">-->
-                        <!--<div class="form-group">-->
-                            <!--<label class="control-label">角色：</label>-->
-                            <!--<select class="form-control" ng-model="searchRole" ng-options="x.roleName for x in roles"-->
-                                    <!--required>-->
-                            <!--</select>-->
-                        <!--</div>-->
+                    <!--<div class="form-group">-->
+                    <!--<label class="control-label">角色：</label>-->
+                    <!--<select class="form-control" ng-model="searchRole" ng-options="x.roleName for x in roles"-->
+                    <!--required>-->
+                    <!--</select>-->
+                    <!--</div>-->
                     <!--</div>-->
 
                     <div class="col-lg-1 col-md-1 col-xs-3">
@@ -54,7 +54,7 @@
 
                 <div class="col-lg-1 col-md-1 col-xs-3 pull-right">
                     <!--<div class="form-group" >-->
-                    <button type="button" data-toggle="modal" data-target="#saveOrUpdateSysUserDialog"
+                    <button type="button" data-toggle="modal" data-target="#saveOrUpdatePrinterDialog"
                             class="btn btn-sm btn-info">增加
                     </button>
                     <!--</div>-->
@@ -80,31 +80,31 @@
                     </tr>
                     </thead>
                     <tbody>
-                    <tr ng-repeat="sysUser in sysUsers">
-                        <td>{{ sysUser.id }}</td>
-                        <td>{{ sysUser.userName}}</td>
-                        <td>{{ sysUser.roleName}}</td>
-                        <td>{{ sysUser.email}}</td>
-                        <td>{{ sysUser.phoneNo}}</td>
-                        <td>{{ sysUser.status==0?"启用":"禁用"}}</td>
-                        <td>{{ sysUser.createTime | date:'yyyy-MM-dd hh:mm:ss'}}</td>
-                        <td>{{ sysUser.modifier}}</td>
+                    <tr ng-repeat="printer in printers">
+                        <td>{{ printer.id }}</td>
+                        <td>{{ printer.userName}}</td>
+                        <td>{{ printer.roleName}}</td>
+                        <td>{{ printer.email}}</td>
+                        <td>{{ printer.phoneNo}}</td>
+                        <td>{{ printer.status==0?"启用":"禁用"}}</td>
+                        <td>{{ printer.createTime | date:'yyyy-MM-dd hh:mm:ss'}}</td>
+                        <td>{{ printer.modifier}}</td>
                         <td>
                             <button type="button" title="编辑" data-toggle="modal"
-                                    data-target="#saveOrUpdateSysUserDialog"
-                                    ng-click="getSysUser(sysUser.id)" class="btn btn-link no-border">
+                                    data-target="#saveOrUpdatePrinterDialog"
+                                    ng-click="getPrinter(printer.id)" class="btn btn-link no-border">
                                 <em class="fa fa-pencil font-s-16"></em>
                             </button>
                             <button type="button" title="删除"
-                                    ng-click="openConfirm(sysUser.id)" class="btn btn-link no-border">
+                                    ng-click="openConfirm(printer.id)" class="btn btn-link no-border">
                                 <em class="fa fa-trash-o font-s-16"></em>
                             </button>
-                            <button type="button" ng-click="enOrDisableUser(sysUser)" class="btn btn-link no-border">
-                                <em class="fa fa-lock font-s-16" ng-show="{{sysUser.status==0}}" title="禁用"></em>
-                                <em class="fa fa-unlock font-s-16" ng-show="{{sysUser.status==1}}" title="启用"></em>
+                            <button type="button" ng-click="enOrDisableUser(printer)" class="btn btn-link no-border">
+                                <em class="fa fa-lock font-s-16" ng-show="{{printer.status==0}}" title="禁用"></em>
+                                <em class="fa fa-unlock font-s-16" ng-show="{{printer.status==1}}" title="启用"></em>
                             </button>
                             <button type="button" title="重置密码"
-                                    ng-click="resetPassword(sysUser.id)" class="btn btn-link no-border">
+                                    ng-click="resetPassword(printer.id)" class="btn btn-link no-border">
                                 <span class="text-info">重置密码</span>
                             </button>
                         </td>
@@ -124,38 +124,26 @@
     <!-- START 表单模态框-->
 
     <!-- 模态框（Modal） -->
-    <div class="modal fade" id="saveOrUpdateSysUserDialog" data-backdrop="static" data-keyboard="false"
+    <div class="modal fade" id="saveOrUpdatePrinterDialog" data-backdrop="static" data-keyboard="false"
          aria-hidden="true"
-         tabindex="-1" sysUser="dialog">
+         tabindex="-1" printer="dialog">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header modal-padding">
                     <button type="button" class="close" data-dismiss="modal" aria-hidden="true"
-                            ng-click="initSysUser()">
+                            ng-click="initPrinter()">
                         &times;
                     </button>
-                    <h4 class="modal-title" ng-show="sysUser.id == undefined">
+                    <h4 class="modal-title" ng-show="printer.id == undefined">
                         新增
                     </h4>
-                    <h4 class="modal-title" ng-show="sysUser.id != undefined">
+                    <h4 class="modal-title" ng-show="printer.id != undefined">
                         编辑
                     </h4>
                 </div>
                 <div class="modal-body">
-                    <form name="sysUserForm" ng-submit="saveSysUser()" novalidate=""
+                    <form name="printerForm" ng-submit="savePrinter()" novalidate=""
                           class="form-horizontal form-validate ng-pristine ng-valid">
-
-                        <div class="form-group">
-                            <label class="control-label col-lg-3 col-md-3 col-sm-3">角色
-                                <span class="text-danger">*</span>
-                            </label>
-
-                            <div class="col-lg-8 col-md-8 col-sm-8">
-                                <select class="form-control" ng-model="role" ng-options="x.roleName for x in roles"
-                                        required>
-                                </select>
-                            </div>
-                        </div>
 
                         <div class="form-group">
                             <label class="control-label col-lg-3 col-md-3 col-sm-3">用户名
@@ -163,9 +151,9 @@
                             </label>
 
                             <div class="col-lg-8 col-md-8 col-sm-8">
-                                <input type="text" name="userName" ng-model="sysUser.userName"
+                                <input type="text" name="userName" ng-model="printer.userName"
                                        placeholder="请填写字母、数字或汉字，2-10字符" class="form-control" maxlength="10"
-                                       ng-pattern="/^[a-zA-Z0-9\u4e00-\u9fa5]{2,10}$/" required>
+                                       ng-pattern="/^[a-zA-Z0-9\u4e00-\u9fa5]{2,10}$/" ng-disabled="{{printer.id != undefined}}" required>
                             </div>
                         </div>
 
@@ -175,7 +163,7 @@
                             </label>
 
                             <div class="col-lg-8 col-md-8 col-sm-8">
-                                <input type="email" name="email" ng-model="sysUser.email"
+                                <input type="email" name="email" ng-model="printer.email"
                                        placeholder="请填写邮箱" class="form-control" maxlength="50" required>
                             </div>
                         </div>
@@ -186,10 +174,32 @@
                             </label>
 
                             <div class="col-lg-8 col-md-8 col-sm-8">
-                                <input type="text" name="phoneNo" ng-model="sysUser.phoneNo" class="form-control"
+                                <input type="text" name="phoneNo" ng-model="printer.phoneNo" class="form-control"
                                        ng-pattern="/^[0-9]{11}$/" maxlength="11" placeholder="请填写手机号"
                                        required>
-                                <span ng-show="sysUserForm.phoneNo.$dirty &amp;&amp; sysUserForm.phoneNo.$error.required"></span>
+                                <span ng-show="printerForm.phoneNo.$dirty &amp;&amp; printerForm.phoneNo.$error.required"></span>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="control-label col-lg-3 col-md-3 col-sm-3">真实名
+                            </label>
+
+                            <div class="col-lg-8 col-md-8 col-sm-8">
+                                <input type="text" name="realName" ng-model="printer.realName"
+                                       placeholder="请填写字母、数字或汉字，2-10字符" class="form-control" maxlength="10"
+                                       ng-pattern="/^[a-zA-Z0-9\u4e00-\u9fa5]{2,10}$/">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="control-label col-lg-3 col-md-3 col-sm-3">身份证号
+                            </label>
+
+                            <div class="col-lg-8 col-md-8 col-sm-8">
+                                <input type="text" name="idNumber" ng-model="printer.idNumber"
+                                       placeholder="请填写18个数字" class="form-control" maxlength="18"
+                                       ng-pattern="/^[0-9]{18}$/">
                             </div>
                         </div>
 
@@ -198,10 +208,10 @@
                 <div class="modal-footer modal-padding">
                     <div class="text-center">
                         <button type="submit" class="btn btn-primary"
-                                ng-click="saveSysUser()" ng-disabled="sysUserForm.$invalid">提交
+                                ng-click="savePrinter()" ng-disabled="printerForm.$invalid">提交
                         </button>
                         &nbsp;&nbsp;&nbsp;&nbsp;
-                        <button type="button" class="btn btn-default" data-dismiss="modal" ng-click="initSysUser()">取消
+                        <button type="button" class="btn btn-default" data-dismiss="modal" ng-click="initPrinter()">取消
                         </button>
                     </div>
                 </div>
