@@ -1,0 +1,166 @@
+<h3>打印店管理
+    <small><a class="no-decoration" ui-sref="app.listPrintShops">打印店管理</a>
+
+        <div style="display: inline;">/ 打印店详情</div>
+    </small>
+</h3>
+<div>
+    <!-- START panel-->
+    <div class="panel panel-default">
+        <toaster-container
+                toaster-options="{'position-class': 'toast-center', 'close-button':true}"></toaster-container>
+        <!-- START 详情弹出框（Modal） -->
+        <!--<div class="modal-content">-->
+        <div class="panel-heading modal-padding">
+            <button type="button" class="btn btn-default btn-sm btn-back" data-dismiss="modal" aria-hidden="true"
+                    ng-click="closeDetail()">
+                返回
+            </button>
+        </div>
+        <div class="panel-body">
+            <form name="printShopForm" ng-submit="savePrintShop()" novalidate=""
+                  class="form-horizontal form-validate ng-pristine ng-valid">
+
+                <legend><strong>打印店信息</strong></legend>
+
+                <div class="form-group">
+                    <label class="control-label col-lg-2 col-md-2 col-sm-3 col-xs-3">类型
+                        <span>:</span>
+                    </label>
+
+                    <div class="col-lg-2 col-md-2 col-sm-2  col-xs-6">
+                        <div class="pt-7">{{printShop.addressTypeDesc}}</div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="control-label col-lg-2 col-md-2 col-sm-3">店名
+                        <span>:</span>
+                    </label>
+
+                    <div class="col-lg-7 col-md-7 col-sm-7">
+                        <div class="pt-7">{{printShop.printShopName}}</div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="control-label col-lg-2 col-md-2 col-sm-3">地址
+                        <span>:</span>
+                    </label>
+
+                    <div class="col-lg-9 col-md-9 col-sm-9">
+                        <div class="pt-7">{{printShop.address}}</div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="control-label col-lg-2 col-md-2 col-sm-3">电话
+                        <span>:</span>
+                    </label>
+
+                    <div class="col-lg-7 col-md-7 col-sm-8">
+                        <div class="pt-7">{{printShop.phoneNo}}</div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="control-label col-lg-2 col-md-2 col-sm-3">
+                        经度<span>:</span>
+                    </label>
+
+                    <div class="col-lg-7 col-md-7 col-sm-8">
+                        <div class="pt-7">{{printShop.longitude}}</div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="control-label col-lg-2 col-md-2 col-sm-3">
+                        纬度<span>:</span>
+                    </label>
+
+                    <div class="col-lg-7 col-md-7 col-sm-8">
+                        <div class="pt-7">{{printShop.latitude}}</div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="control-label col-lg-2 col-md-2 col-sm-3">店图片
+                        <span>:</span>
+                    </label>
+
+                    <div class="col-lg-7 col-md-7 col-sm-7">
+                        <div class="pt-7">
+                            <img src="{{printShop.printShopImage}}" class="shop-image" alt="支持jpg, png, peg格式，不大于2M"/>
+                        </div>
+                    </div>
+
+                </div>
+
+
+                <legend><strong>打印店主账号信息</strong></legend>
+
+                <div class="form-group">
+                    <label class="control-label col-lg-2 col-md-2 col-sm-3">用户名
+                        <span>:</span>
+                    </label>
+
+                    <div class="col-lg-7 col-md-7 col-sm-7">
+                        <div class="pt-7">{{printShop.userName}}</div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="control-label col-lg-2 col-md-2 col-sm-3">邮箱
+                        <span>:</span>
+                    </label>
+
+                    <div class="col-lg-7 col-md-7 col-sm-8">
+                        <div class="pt-7">{{printShop.email}}</div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="control-label col-lg-2 col-md-2 col-sm-3">店主手机号
+                        <span>:</span>
+                    </label>
+
+                    <div class="col-lg-7 col-md-7 col-sm-8">
+                        <div class="pt-7">{{printShop.accountPhone}}</div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="control-label col-lg-2 col-md-2 col-sm-3">真实名
+                        <span>:</span>
+                    </label>
+
+                    <div class="col-lg-7 col-md-7 col-sm-8">
+                        <div class="pt-7">{{printShop.realName}}</div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="control-label col-lg-2 col-md-2 col-sm-3">身份证号
+                        <span>:</span>
+                    </label>
+
+                    <div class="col-lg-7 col-md-7 col-sm-8">
+                        <div class="pt-7">{{printShop.idNumber}}</div>
+                    </div>
+                </div>
+
+            </form>
+        </div>
+        <div class="panel-footer modal-padding">
+            <div class="text-center">
+                <button type="button" class="btn btn-default" ng-click="closeDetail()">关闭
+                </button>
+            </div>
+        </div>
+    </div>
+    <!-- /.modal-content -->
+
+    <!-- START 详情弹出框（Modal） -->
+    <!--</div>-->
+    <!-- END panel-->
+</div>

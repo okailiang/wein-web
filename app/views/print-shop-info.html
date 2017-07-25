@@ -1,11 +1,15 @@
 <h3>打印店管理
-    <small><a class="no-decoration" ui-sref="app.listPrintShops">打印店管理</a>/城市详情</small>
+    <small><a class="no-decoration" ui-sref="app.listPrintShops">打印店管理</a>
+        <div style="display: inline;" ng-show="{{!$stateParams.id}}">/ 打印店新增</div>
+        <div style="display: inline;" ng-show="{{!!$stateParams.id}}">/ 打印店编辑</div>
+    </small>
 </h3>
 <div ng-controller="PrintShopController">
     <!-- START panel-->
     <div class="panel panel-default">
+        <toaster-container
+                toaster-options="{'position-class': 'toast-center', 'close-button':true}"></toaster-container>
         <!-- START 详情弹出框（Modal） -->
-
         <!--<div class="modal-content">-->
         <div class="panel-heading modal-padding">
             <button type="button" class="btn btn-default btn-sm btn-back" data-dismiss="modal" aria-hidden="true"
@@ -18,8 +22,126 @@
                   class="form-horizontal form-validate ng-pristine ng-valid">
 
                 <legend><strong>打印店信息</strong></legend>
+
                 <div class="form-group">
-                    <label class="control-label col-lg-2 col-md-2 col-sm-3">用户名用户名
+                    <label class="control-label col-lg-2 col-md-2 col-sm-3 col-xs-3">类型
+                        <span class="text-danger">*</span>
+                    </label>
+
+                    <div class="col-lg-2 col-md-2 col-sm-2  col-xs-6">
+                        <select class="form-control" name="addressType" ng-model="printShop.addressType" required>
+                            <option value="1">高校</option>
+                            <option value="2">非高校</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="control-label col-lg-2 col-md-2 col-sm-3">店名
+                        <span class="text-danger">*</span>
+                    </label>
+
+                    <div class="col-lg-7 col-md-7 col-sm-7">
+                        <input type="text" name="printShopName" ng-model="printShop.printShopName"
+                               placeholder="请填写字母、数字或汉字，2-50字符" class="form-control" maxlength="32"
+                               ng-pattern="/^[a-zA-Z0-9\u4e00-\u9fa5]{2,32}$/"
+                               ng-disabled="{{printShop.id != undefined}}" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="control-label col-lg-2 col-md-2 col-sm-3">地址
+                        <span class="text-danger">*</span>
+                    </label>
+
+                    <div class="col-lg-9 col-md-9 col-sm-9">
+                        <label class="control-label">省： </label>
+                        <select class="input-sm form-control form-city" ng-change="changeProvince(province)"
+                                ng-model="province" ng-options="x.name for x in provinces" required>
+                        </select>
+                        <label class="control-label">市： </label>
+                        <select class="input-sm form-control form-city" ng-change="changeCity(city)"
+                                ng-model="city"
+                                ng-options="x.name for x in citys" required>
+                        </select>
+                        <label class="control-label">县(区)： </label>
+                        <select class="input-sm form-control form-city" ng-model="area"
+                                ng-options="x.name for x in areas" required>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="control-label col-lg-2 col-md-2 col-sm-3">详细地址
+                        <span class="text-danger">*</span>
+                    </label>
+
+                    <div class="col-lg-7 col-md-7 col-sm-7">
+                        <input type="text" name="detailAddress" ng-model="printShop.detailAddress"
+                               placeholder="请填写字母、数字或汉字，200字符" class="form-control" maxlength="200"
+                               ng-pattern="/^[a-zA-Z0-9\u4e00-\u9fa5]{1,200}$/">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="control-label col-lg-2 col-md-2 col-sm-3">电话
+                        <span class="text-danger">*</span>
+                    </label>
+
+                    <div class="col-lg-7 col-md-7 col-sm-8">
+                        <input type="text" name="phoneNo" ng-model="printShop.phoneNo" class="form-control"
+                               ng-pattern="/^[0-9]{11}$/" maxlength="11" placeholder="请填写手机号"
+                               required>
+                        <span ng-show="printShopForm.phoneNo.$dirty &amp;&amp; printShopForm.phoneNo.$error.required"></span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="control-label col-lg-2 col-md-2 col-sm-3">
+                        经度<span class="text-danger">*</span>
+                    </label>
+
+                    <div class="col-lg-7 col-md-7 col-sm-8">
+                        <input type="text" name="longitude" ng-model="printShop.longitude" placeholder="请输入不大于180的小数"
+                               ng-pattern="/^[0-9]{1,3}([.]{1}[0-9]{1,7})?$/" maxlength="11"
+                               class="form-control"
+                               ng-disabled="detailFlag" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="control-label col-lg-2 col-md-2 col-sm-3">
+                        纬度<span class="text-danger">*</span>
+                    </label>
+
+                    <div class="col-lg-7 col-md-7 col-sm-8">
+                        <input type="text" name="latitude" ng-model="printShop.latitude" placeholder="请输入不大于90的小数"
+                               ng-pattern="/^[0-9]{1,2}([.]{1}[0-9]{1,7})?$/" maxlength="10"
+                               class="form-control"
+                               ng-disabled="detailFlag" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="control-label col-lg-2 col-md-2 col-sm-3">店图片
+                        <span class="text-danger">*</span>
+                    </label>
+
+                    <div class="col-lg-7 col-md-7 col-sm-7">
+                        <input type="file" id="shopImageFile" class="hidden" name="printShop.printShopImage" required>
+                        <button type="button" class="btn btn-default pull-left" ng-click="upload()">
+                            <span class="glyphicon glyphicon-folder-open"></span>
+                        </button>
+                        <img src="{{printShop.printShopImage}}" class="shop-image" alt="支持不大于2M,jpg/png/jpeg格式"/>
+                    </div>
+
+                </div>
+
+
+                <legend><strong>打印店主账号信息</strong></legend>
+
+                <div class="form-group">
+                    <label class="control-label col-lg-2 col-md-2 col-sm-3">用户名
                         <span class="text-danger">*</span>
                     </label>
 
@@ -43,20 +165,20 @@
                 </div>
 
                 <div class="form-group">
-                    <label class="control-label col-lg-2 col-md-2 col-sm-3">手机号
+                    <label class="control-label col-lg-2 col-md-2 col-sm-3">店主手机号
                         <span class="text-danger">*</span>
                     </label>
 
                     <div class="col-lg-7 col-md-7 col-sm-8">
-                        <input type="text" name="phoneNo" ng-model="printShop.phoneNo" class="form-control"
+                        <input type="text" name="accountPhone" ng-model="printShop.accountPhone" class="form-control"
                                ng-pattern="/^[0-9]{11}$/" maxlength="11" placeholder="请填写手机号"
                                required>
-                        <span ng-show="printShopForm.phoneNo.$dirty &amp;&amp; printShopForm.phoneNo.$error.required"></span>
                     </div>
                 </div>
 
                 <div class="form-group">
                     <label class="control-label col-lg-2 col-md-2 col-sm-3">真实名
+                        <span>&nbsp;&nbsp;</span>
                     </label>
 
                     <div class="col-lg-7 col-md-7 col-sm-8">
@@ -66,16 +188,35 @@
                     </div>
                 </div>
 
-                <legend><strong>打印店主账号信息</strong></legend>
-
                 <div class="form-group">
                     <label class="control-label col-lg-2 col-md-2 col-sm-3">身份证号
+                        <span>&nbsp;&nbsp;</span>
                     </label>
 
                     <div class="col-lg-7 col-md-7 col-sm-8">
                         <input type="text" name="idNumber" ng-model="printShop.idNumber"
                                placeholder="请填写18个数字" class="form-control" maxlength="18"
                                ng-pattern="/^[0-9]{18}$/">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="control-label col-lg-2 col-md-2 col-sm-3">密码
+                        <span class="text-danger">*</span>
+                    </label>
+
+                    <div class="col-lg-7 col-md-7 col-sm-8">
+                        <div class="pull-left">
+                            <input type="text" name="password" ng-model="printShop.password"
+                                   placeholder="请点击生成或输入" class="form-control" minlength="6" maxlength="20"
+                                   ng-pattern="/^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[\p{Punct}+]).{6,20}$/" required>
+                            <span ng-show="printShopForm.password.$dirty &amp;&amp; printShopForm.password.$error.pattern"
+                                  class="text-danger">密码必须包括大小写字母、数字、特殊字符，长度6-20 </span>
+                        </div>
+                        <div class="pull-right">
+                            <button type="button" ng-click="getPassword()" class="btn btn-primary">获取随机密码
+                            </button>
+                        </div>
                     </div>
                 </div>
 

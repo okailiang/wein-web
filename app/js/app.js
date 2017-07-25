@@ -207,10 +207,34 @@ App.config(['$stateProvider', '$locationProvider', '$urlRouterProvider', 'RouteH
                 resolve: helper.resolveFor('toaster', 'ngDialog', 'loaders.css')
             })
             .state('app.printShopInfo', {
-                url: '/printShopInfo',
-                title: '打印店管理',
+                url: '/printShopInfo/:id',
+                title: '打印店新增和编辑',
                 templateUrl: helper.basepath('print-shop-info.html'),
-                resolve: helper.resolveFor('toaster', 'ngDialog', 'loaders.css')
+                resolve: helper.resolveFor('toaster', 'ngDialog', 'loaders.css'),
+            })
+            .state('app.printShopDetail', {
+                url: '/printShopDetail/:id',
+                title: '打印店详情',
+                templateUrl: helper.basepath('print-shop-detail.html'),
+                resolve: helper.resolveFor('toaster', 'ngDialog', 'loaders.css'),
+                controller: ["$rootScope", "$scope", "$http", 'toaster', '$stateParams', function ($rootScope, $scope, $http, toaster, $stateParams) {
+                    /**
+                     * 详情
+                     */
+                    $scope.getPrintShop = function (id) {
+                        var url = '/admin/printShop/getPrintShop?id=' + id;
+                        $http.get(url).success(function (data) {
+                            $scope.printShop = data;
+                        }).error(function (data, status, headers, config) {
+                            toaster.pop('error', null, data.message);
+                        });
+                    };
+                    $scope.getPrintShop($stateParams.id);
+
+                    $scope.closeDetail = function () {
+                        history.go(-1);
+                    }
+                }]
             })
             .state('app.dashboard', {
                 url: '/dashboard',
@@ -3309,7 +3333,7 @@ App.controller('SysUserController', ['$scope', '$http', 'toaster', 'ngDialog', f
     $scope.pageSize = 10;//列表分页每页数
     $scope.currentPage = 1;
     $scope.sysUser = {};
-    $scope.searchRole={};
+    $scope.searchRole = {};
 
     $scope.handleParam = function (value) {
         if (value == undefined || value == null) {
@@ -4127,7 +4151,7 @@ App.controller('FeedbackController', ['$scope', '$http', 'toaster', 'ngDialog', 
 
         if (type == 1) {
             $scope.opened2 = false;
-            $scope.opened =!$scope.opened;
+            $scope.opened = !$scope.opened;
         }
         if (type == 2) {
             $scope.opened = false;
@@ -4142,12 +4166,13 @@ App.controller('FeedbackController', ['$scope', '$http', 'toaster', 'ngDialog', 
  * Provides 打印店查询、详情
  =========================================================*/
 
-App.controller('PrintShopController', ['$scope', '$http', 'toaster', 'ngDialog', '$filter', function ($scope, $http, toaster, ngDialog, $filter) {
+App.controller('PrintShopController', ['$scope', '$http', 'toaster', 'ngDialog', '$filter', '$stateParams', '$q', '$timeout', function ($scope, $http, toaster, ngDialog, $filter, $stateParams, $q, $timeout) {
     $scope.pageSize = 20;//列表分页每页数
     $scope.currentPage = 1;
     $scope.printShop = {};
-    $scope.provinces =[];
+    $scope.provinces = [];
     $scope.searchCitys = [];
+    $scope.citys = [];
     $scope.searchCity = {};
 
     $scope.handleParam = function (value) {
@@ -4163,7 +4188,13 @@ App.controller('PrintShopController', ['$scope', '$http', 'toaster', 'ngDialog',
         }
         var url = '/common/city/listCitysByParentId?parentId=' + id;
         $http.get(url).success(function (data) {
-            $scope.searchCitys = data;
+            if (type == 1) {
+                $scope.searchCitys = data;
+                $scope.citys = data;
+            }
+            if (type == 2) {
+                $scope.areas = data;
+            }
         }).error(function (data, status, headers, config) {
             toaster.pop('error', null, data.message);
         });
@@ -4172,20 +4203,21 @@ App.controller('PrintShopController', ['$scope', '$http', 'toaster', 'ngDialog',
     $scope.changeProvince = function (province) {
         $scope.searchCitys = [];
         $scope.searchCity = {};
+        $scope.citys = [];
+        $scope.city = {};
+        $scope.areas = [];
+        $scope.area = {};
         $scope.getCityByParent(province.id, 1);
+    };
+    $scope.changeCity = function (city) {
+        $scope.areas = [];
+        $scope.area = {};
+        $scope.getCityByParent(city.id, 2);
     };
 
     $scope.initProvince = function () {
         $http.get('/common/city/listProvince').success(function (data) {
-            var defaultProvince = {};
-            var allChina = {};
-            allChina.id = -1;
-            allChina.name = '全国';
-            defaultProvince.id = 0;
-            defaultProvince.name = '省';
-            $scope.provinces.push(allChina);
-            $scope.provinces.push(defaultProvince);
-            $scope.provinces = $scope.provinces.concat(data);
+            $scope.provinces = data;
         }).error(function (data, status, headers, config) {
             toaster.pop('error', null, data.message);
         });
@@ -4193,8 +4225,8 @@ App.controller('PrintShopController', ['$scope', '$http', 'toaster', 'ngDialog',
     $scope.initProvince();
 
     $scope.initPrintShop = function () {
-        $scope.printShop = {};
         history.go(-1);
+        //$scope.printShop = {};
     };
 
     /**
@@ -4207,9 +4239,12 @@ App.controller('PrintShopController', ['$scope', '$http', 'toaster', 'ngDialog',
         var pageParam = '&pageSize=' + $scope.pageSize + '&curPage=' + $scope.currentPage
         var listParam = '?time=' + (new Date().getTime())
             + "&id=" + $scope.handleParam($scope.searchPrintShopId)
-            + "&creator=" + $scope.handleParam($scope.searchUserName)
+            + "&printerName=" + $scope.handleParam($scope.searchUserName)
+            + "&printShopName=" + $scope.handleParam($scope.searchPrintShopName)
             + "&status=" + $scope.handleParam($scope.searchStatus)
-            + "&type=" + $scope.handleParam($scope.searchType)
+            + "&provinceId=" + ($scope.province == undefined ? "" : $scope.province.id)
+            + "&cityId=" + $scope.handleParam($scope.searchCity.id)
+            + "&addressType=" + $scope.handleParam($scope.searchType)
             + "&createTimeFrom=" + (!$scope.createTimeFrom ? "" : $filter('date')($scope.createTimeFrom, 'yyyy-MM-dd'))
             + "&createTimeTo=" + (!$scope.createTimeTo ? "" : $filter('date')($scope.createTimeTo, 'yyyy-MM-dd'));
         $http.get(listUrl + listParam + pageParam).success(function (data) {
@@ -4269,6 +4304,38 @@ App.controller('PrintShopController', ['$scope', '$http', 'toaster', 'ngDialog',
 
     };
 
+    /**
+     * 启用或禁用打印店
+     */
+    $scope.enOrDisablePrintShop = function (printShop) {
+        if (printShop.status == 0) {
+            $scope.deleteContent = "确认禁用该打印店吗？";
+        } else {
+            $scope.deleteContent = "确认启用该打印店吗？";
+        }
+
+        ngDialog.openConfirm({
+            template: 'deleteConfirmDialogId',
+            className: 'ngdialog-theme-default',//ngdialog-theme-plain ngdialog-theme-default
+            scope: $scope
+        }).then(function (value) {
+            var data = {
+                id: printShop.id,
+                status: printShop.status == 0 ? 1 : 0
+            };
+
+            var url = printShop.status == 0 ? '/admin/printShop/disable' : '/admin/printShop/enable';
+            $http
+                .post(url, data)
+                .success(function (data, status, headers, config) {
+                    toaster.pop('success', null, data.message);
+                    $scope.listPrintShops();
+                }).error(function (data, status, headers, config) {
+                    toaster.pop('error', null, data.message);
+                });
+        });
+    };
+
     $scope.getPassword = function () {
         $http.get('/common/getPassword').success(function (data) {
             $scope.printShop.password = data.password;
@@ -4279,42 +4346,74 @@ App.controller('PrintShopController', ['$scope', '$http', 'toaster', 'ngDialog',
     /**
      * 修改打印店
      */
-    $scope.savePrintShop = function (id) {
-        $scope.deleteContent = "确认置该条打印店为已处理吗";
-        ngDialog.openConfirm({
-            template: 'deleteConfirmDialogId',
-            className: 'ngdialog-theme-default',//ngdialog-theme-plain ngdialog-theme-default
-            scope: $scope
-        }).then(function (value) {
-            var data = {
-                id: id,
-                status: 1
-            };
-            var url = '/admin/printShop/updateStatus';
-            $http
-                .post(url, data)
-                .success(function (data, status, headers, config) {
-                    $('#saveOrUpdatePrintShopDialog').modal('hide');
-                    toaster.pop('success', null, data.message);
-                    $scope.printShop = {};
-                    $scope.listPrintShops();
-                }).error(function (data, status, headers, config) {
-                    toaster.pop('error', null, data.message);
-                });
-        });
+    $scope.savePrintShop = function () {
+        $scope.printShop.provinceId = $scope.province.id;
+        $scope.printShop.cityId = $scope.city.id;
+        $scope.printShop.cityAreaId = $scope.area.id;
+
+        var data = $scope.printShop;
+        var url = $scope.printShop.id == undefined ? '/admin/printShop/save' : '/admin/printShop/update';
+        $http
+            .post(url, data)
+            .success(function (data, status, headers, config) {
+                toaster.pop('success', null, data.message);
+                $scope.printShop = {};
+                history.go(-1);
+            }).error(function (data, status, headers, config) {
+                toaster.pop('error', null, data.message);
+            });
+
     };
 
     /**
-     * 详情
+     * 编辑时初始化城市
+     * @param printShop
      */
-    $scope.getPrintShop = function (id) {
-        var url = '/admin/printShop/getById?id=' + id;
-        $http.get(url).success(function (data) {
-            $scope.printShop = data;
+    $scope.initCitys = function (printShop) {
+
+        $http.get('/common/city/listProvinceCityAreas?areaId=' + printShop.cityAreaId).success(function (data) {
+            $scope.provinces = data.provinces;
+            $scope.citys = data.citys;
+            $scope.areas = data.areas;
+            for (var i = 0; i < $scope.provinces.length; i++) {
+                if (printShop.provinceId == $scope.provinces[i].id) {
+                    $scope.province = $scope.provinces[i];
+                    break;
+                }
+            }
+
+            for (var i = 0; i < $scope.citys.length; i++) {
+                if (printShop.cityId == $scope.citys[i].id) {
+                    $scope.city = $scope.citys[i];
+                    break;
+                }
+            }
+
+            for (var i = 0; i < $scope.areas.length; i++) {
+                if (printShop.cityAreaId == $scope.areas[i].id) {
+                    $scope.area = $scope.areas[i];
+                    break;
+                }
+            }
         }).error(function (data, status, headers, config) {
             toaster.pop('error', null, data.message);
         });
     };
+    /**
+     * 编辑
+     */
+    $scope.getPrintShop = function (id) {
+        var url = '/admin/printShop/getPrintShop?id=' + id;
+        $http.get(url).success(function (data) {
+            $scope.printShop = data;
+            $scope.initCitys(data);
+        }).error(function (data, status, headers, config) {
+            toaster.pop('error', null, data.message);
+        });
+    };
+    if (!!$stateParams.id) {
+        $scope.getPrintShop($stateParams.id);
+    }
 
     /**
      * 显示日历
@@ -4327,23 +4426,47 @@ App.controller('PrintShopController', ['$scope', '$http', 'toaster', 'ngDialog',
 
         if (type == 1) {
             $scope.opened2 = false;
-            $scope.opened =!$scope.opened;
+            $scope.opened = !$scope.opened;
         }
         if (type == 2) {
             $scope.opened = false;
             $scope.opened2 = !$scope.opened2;
         }
     };
-}]);
 
 
+    /**
+     * 上传店图片
+     * @type {string}
+     */
+    $scope.upload = function () {
+        var file = document.getElementById("shopImageFile");
+        var result = file.click();
+        return result;
+    };
+    var fileSelect = function (evt) {
+        var file = evt.currentTarget.files[0];
+        if (!file) {
+            return;
+        }
+        var fileTyes = ["jpg", "png", "jpeg"];
+        var fileType = fileTyes.includes(file.name.substr(file.name.lastIndexOf(".") + 1, file.name.length));
+        if (!fileType || file.size > 2 * 1024 * 1024) {
+            toaster.pop('error', null, '上传支持jpg, png, peg格式图片，不大于2M');
+        }
+        var reader = new FileReader();
+        reader.onload = function (evt) {
+            $scope.$apply(function ($scope) {
+                $scope.printShop.printShopImage = evt.target.result;
+            });
+        };
+        if (file)
+            reader.readAsDataURL(file);
+    };
+    angular.element(document.querySelector('#shopImageFile')).on('change', fileSelect);
 
-
-
-
-
-
-
+}])
+;
 
 
 /**=========================================================

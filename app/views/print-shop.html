@@ -140,7 +140,7 @@
                         <th>状态</th>
                         <th>开店时间</th>
                         <th>修改人</th>
-                        <th>修改时间</th>
+                        <!--<th>修改时间</th>-->
                         <th>操作</th>
                     </tr>
                     </thead>
@@ -148,31 +148,37 @@
                     <tr ng-repeat="printShop in printShops">
                         <td>{{ printShop.id }}</td>
                         <td>{{ printShop.addressTypeDesc}}</td>
-                        <td title="printShop.provinceCityArea">{{ printShop.cityName}}</td>
+                        <td title="{{printShop.provinceCityArea}}">{{ printShop.cityName}}</td>
                         <td title="{{ printShop.printShopName}}" class="td-max-width">
                             <div class="text-overflow">{{ printShop.printShopName}}</div>
                         </td>
-                        <td title="{{ printShop.detailAddress}}" class="td-img-width">{{ printShop.detailAddress}}</td>
+                        <td title="{{ printShop.address}}" class="td-img-width">{{ printShop.detailAddress}}</td>
                         <td>{{ printShop.phoneNo}}</td>
                         <td>{{ printShop.printerName}}</td>
                         <td>{{ printShop.statusDesc}}</td>
                         <td>{{ printShop.createTime | date:'yyyy-MM-dd hh:mm:ss'}}</td>
                         <td>{{ printShop.modifier}}</td>
-                        <td>{{ printShop.modifyTime | date:'yyyy-MM-dd hh:mm:ss'}}</td>
+                        <!--<td>{{ printShop.modifyTime | date:'yyyy-MM-dd hh:mm:ss'}}</td>-->
                         <td>
-                            <button type="button" title="置已处理" ng-click="updatePrintShop(printShop.id)"
-                                    class="btn btn-link no-border" ng-show="{{printShop.status==0}}">
-                                <em class="fa fa-bookmark-o font-s-16"></em>
+                            <button type="button" ng-click="enOrDisablePrintShop(printShop)" class="btn btn-link no-border">
+                                <em class="fa fa-lock font-s-16" ng-show="{{printShop.status==0}}" title="禁用"></em>
+                                <em class="fa fa-unlock font-s-16" ng-show="{{printShop.status==1}}" title="启用"></em>
                             </button>
+
+                            <a ui-sref="app.printShopInfo({id:{{printShop.id}}})">
+                            <button type="button" title="编辑"  class="btn btn-link no-border">
+                                <em class="fa fa-pencil font-s-16"></em>
+                            </button>
+                            </a>
                             <button type="button" title="删除"
                                     ng-click="removePrintShop(printShop.id)" class="btn btn-link no-border">
                                 <em class="fa fa-trash-o font-s-16"></em>
                             </button>
-                            <button type="button" title="详情" data-toggle="modal"
-                                    data-target="#saveOrUpdatePrintShopDialog"
-                                    ng-click="getPrintShop(printShop.id)" class="btn btn-link no-border">
+                            <a ui-sref="app.printShopDetail({id:{{printShop.id}}})">
+                            <button type="button" title="详情" class="btn btn-link no-border">
                                 <em class="fa fa-comment-o font-s-16"></em>
                             </button>
+                            </a>
                         </td>
                     </tr>
                     </tbody>
